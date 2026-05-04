@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arc Pro Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root { --main: #0052FF; --bg: #010409; --card: #0d1117; --border: #30363d; --text: #c9d1d9; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 1000px; padding: 10px; }
+        
+        /* Header & Logo */
+        .navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--card); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border); }
+        .logo-box { display: flex; align-items: center; gap: 10px; }
+        .logo-img { width: 35px; height: 35px; border-radius: 8px; }
+        
+        /* Layout Grid */
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } }
+
+        /* Card Styles */
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+        h3 { margin-top: 0; font-size: 18px; color: white; display: flex; align-items: center; gap: 8px; }
+        
+        /* Inputs & Buttons */
+        input { width: 100%; padding: 12px; background: #161b22; border: 1px solid var(--border); border-radius: 8px; color: white; margin: 8px 0; font-size: 14px; }
+        .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .btn-primary { background: var(--main); color: white; }
+        .btn-check { background: #238636; color: white; margin-top: 5px; }
+        
+        /* Wallet Status */
+        .balance-box { text-align: center; padding: 15px; border-radius: 12px; background: #161b22; margin-bottom: 15px; border-left: 4px solid var(--main); }
+        .amt { font-size: 28px; font-weight: bold; color: white; }
+        
+        /* Ledger Table */
+        .ledger-container { overflow-x: auto; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 15px; }
+        table { width: 100%; border-collapse: collapse; min-width: 400px; }
+        th { text-align: left; font-size: 12px; color: #8b949e; padding: 10px; border-bottom: 1px solid var(--border); }
+        td { padding: 12px 10px; font-size: 13px; border-bottom: 1px solid #21262d; }
+        .tx-link { color: var(--main); text-decoration: none; font-family: monospace; }
+        
+        /* Export Icons */
+        .export-btns { display: flex; gap: 10px; margin-bottom: 10px; }
+        .ex-small { padding: 5px 10px; font-size: 11px; background: #21262d; color: white; border: 1px solid var(--border); border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="navbar">
+        <div class="logo-box">
+            <img src="logo.png" alt="Arc" class="logo-img" onerror="this.src='https://arc.network/favicon.ico'">
+            <span style="font-weight: bold; color: white;">ArcPro</span>
+        </div>
+        <button id="connectBtn" class="btn-primary" style="width: auto; padding: 8px 16px;">Connect Wallet</button>
+    </div>
+
+    <div class="grid-layout">
+        <div class="card">
+            <h3>My Wallet</h3>
+            <div class="balance-box">
+                <div style="font-size: 12px; color: #8b949e;">Your Balance</div>
+                <div class="amt" id="myBalance">0.00 <span style="font-size: 14px;">ARC</span></div>
+                <div id="myAddr" style="font-size: 10px; color: #8b949e; margin-top: 5px; word-break: break-all;">Not Connected</div>
+            </div>
+            
+            <input type="text" id="toAddr" placeholder="Recipient Address (0x...)">
+            <input type="number" id="sendAmt" placeholder="Amount to Send">
+            <button class="btn btn-primary" onclick="sendArc()">Send Funds Now</button>
+        </div>
+
+        <div class="card">
+            <h3>Wallet Checker</h3>
+            <p style="font-size: 12px; color: #8b949e;">Check any wallet balance on Arc Network real-time.</p>
+            <input type="text" id="checkAddr" placeholder="Paste Wallet Address (0x...)">
+            <button class="btn btn-check" onclick="checkAnyWallet()">Check Balance</button>
+            <div id="checkResult" style="margin-top: 15px; padding: 10px; background: #161b22; border-radius: 8px; display: none;">
+                <span style="font-size: 12px;">Result:</span>
+                <div id="checkAmt" style="font-size: 20px; color: #0ecb81; font-weight: bold;">0.00 ARC</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ledger-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0;">Transaction Ledger</h3>
+            <div class="export-btns">
+                <button class="ex-small" onclick="exportData('pdf')">PDF</button>
+                <button class="ex-small" onclick="exportData('xlsx')">Excel</button>
+            </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Transaction ID</th>
+                </tr>
+            </thead>
+            <tbody id="ledgerBody">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let provider, signer, myAddress;
+    
+    // English Voice Function
+    const speak = (text) => {
+        const speech = new SpeechSynthesisUtterance(text);
+        speech.lang = 'en-US';
+        speech.rate = 0.9;
+        window.speechSynthesis.speak(speech);
+    };
+
+    // Connect Wallet
+    document.getElementById('connectBtn').addEventListener('click', async () => {
+        if (window.ethereum) {
+            provider = new ethers.BrowserProvider(window.ethereum);
+            const accounts = await provider.send("eth_requestAccounts", []);
+            signer = await provider.getSigner();
+            myAddress = accounts[0];
+            
+            document.getElementById('myAddr').innerText = myAddress;
+            document.getElementById('connectBtn').innerText = "Connected";
+            updateMyBalance();
+            speak("Wallet connected successfully to Arc Network");
+        } else {
+            alert("No wallet found. Please use a Web3 browser or extension.");
+        }
+    });
+
+    async function updateMyBalance() {
+        const bal = await provider.getBalance(myAddress);
+        document.getElementById('myBalance').innerText = parseFloat(ethers.formatEther(bal)).toFixed(4) + " ARC";
+    }
+
+    // Real-time Wallet Checker
+    async function checkAnyWallet() {
+        const addr = document.getElementById('checkAddr').value;
+        if(!ethers.isAddress(addr)) return alert("Invalid Address");
+        
+        try {
+            const bal = await provider.getBalance(addr);
+            const formatted = parseFloat(ethers.formatEther(bal)).toFixed(4);
+            document.getElementById('checkResult').style.display = 'block';
+            document.getElementById('checkAmt').innerText = `${formatted} ARC`;
+            speak(`Balance for this wallet is ${formatted} tokens`);
+        } catch (e) {
+            alert("Error checking balance");
+        }
+    }
+
+    // Send Function
+    async function sendArc() {
+        const to = document.getElementById('toAddr').value;
+        const amt = document.getElementById('sendAmt').value;
+        if(!to || !amt) return;
+
+        try {
+            speak("Initiating transaction. Please confirm in your wallet.");
+            const tx = await signer.sendTransaction({
+                to: to,
+                value: ethers.parseEther(amt)
+            });
+            
+            addToLedger(tx.hash, amt);
+            await tx.wait();
+            speak("Transaction confirmed on the Arc Network.");
+            updateMyBalance();
+        } catch (e) {
+            speak("Transaction failed");
+        }
+    }
+
+    function addToLedger(hash, amt) {
+        const body = document.getElementById('ledgerBody');
+        const now = new Date().toLocaleString();
+        const row = `
+            <tr>
+                <td>${now}</td>
+                <td style="color:#0ecb81">SEND</td>
+                <td>${amt} ARC</td>
+                <td><a href="https://explorer.arc.network/tx/${hash}" target="_blank" class="tx-link">${hash.substring(0,12)}...</a></td>
+            </tr>
+        `;
+        body.insertAdjacentHTML('afterbegin', row);
+    }
+
+    function exportData(type) {
+        if(type === 'pdf') {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("Arc Network Transaction Report", 10, 10);
+            doc.save("Arc_Report.pdf");
+        } else {
+            alert("Exporting to Excel...");
+        }
+    }
+</script>
+
+</body>
+</html>
