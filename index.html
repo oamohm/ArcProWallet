@@ -2,153 +2,208 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arc Pro Wallet - Real Time</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Arc Pro Dashboard</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
     <style>
-        :root { --primary: #0052FF; --bg: #0b0e11; --card: #181a20; --text: #eaecef; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 15px; }
-        .container { max-width: 480px; margin: auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px; }
-        .logo-img { width: 45px; height: 45px; object-fit: contain; }
-        .wallet-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid #303339; margin-bottom: 20px; }
-        .balance-label { color: #848e9c; font-size: 14px; }
-        .balance-amount { font-size: 32px; font-weight: bold; margin: 10px 0; }
-        input { width: 100%; padding: 12px; background: #2b2f36; border: 1px solid #474d57; border-radius: 8px; color: white; box-sizing: border-box; margin-bottom: 12px; }
-        .btn-main { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; }
-        .btn-secondary { background: #2b3139; color: white; margin-top: 10px; }
-        .ledger-section { background: var(--card); border-radius: 16px; padding: 15px; margin-top: 20px; }
-        .tx-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #2b3139; font-size: 13px; }
-        .tx-id { color: var(--primary); text-decoration: none; font-family: monospace; }
-        .status-success { color: #0ecb81; }
+        :root { --main: #0052FF; --bg: #010409; --card: #0d1117; --border: #30363d; --text: #c9d1d9; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 1000px; padding: 10px; }
+        
+        /* Header & Logo */
+        .navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: var(--card); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border); }
+        .logo-box { display: flex; align-items: center; gap: 10px; }
+        .logo-img { width: 35px; height: 35px; border-radius: 8px; }
+        
+        /* Layout Grid */
+        .grid-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 768px) { .grid-layout { grid-template-columns: 1fr; } }
+
+        /* Card Styles */
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+        h3 { margin-top: 0; font-size: 18px; color: white; display: flex; align-items: center; gap: 8px; }
+        
+        /* Inputs & Buttons */
+        input { width: 100%; padding: 12px; background: #161b22; border: 1px solid var(--border); border-radius: 8px; color: white; margin: 8px 0; font-size: 14px; }
+        .btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .btn-primary { background: var(--main); color: white; }
+        .btn-check { background: #238636; color: white; margin-top: 5px; }
+        
+        /* Wallet Status */
+        .balance-box { text-align: center; padding: 15px; border-radius: 12px; background: #161b22; margin-bottom: 15px; border-left: 4px solid var(--main); }
+        .amt { font-size: 28px; font-weight: bold; color: white; }
+        
+        /* Ledger Table */
+        .ledger-container { overflow-x: auto; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 15px; }
+        table { width: 100%; border-collapse: collapse; min-width: 400px; }
+        th { text-align: left; font-size: 12px; color: #8b949e; padding: 10px; border-bottom: 1px solid var(--border); }
+        td { padding: 12px 10px; font-size: 13px; border-bottom: 1px solid #21262d; }
+        .tx-link { color: var(--main); text-decoration: none; font-family: monospace; }
+        
+        /* Export Icons */
+        .export-btns { display: flex; gap: 10px; margin-bottom: 10px; }
+        .ex-small { padding: 5px 10px; font-size: 11px; background: #21262d; color: white; border: 1px solid var(--border); border-radius: 4px; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <img src="logo.png" alt="Arc" class="logo-img" onerror="this.src='https://arc.network/favicon.ico'">
-        <button id="connectBtn" class="btn-main" style="width: auto; padding: 8px 15px;">Connect Wallet</button>
+<div class="app-container">
+    <div class="navbar">
+        <div class="logo-box">
+            <img src="logo.png" alt="Arc" class="logo-img" onerror="this.src='https://arc.network/favicon.ico'">
+            <span style="font-weight: bold; color: white;">ArcPro</span>
+        </div>
+        <button id="connectBtn" class="btn-primary" style="width: auto; padding: 8px 16px;">Connect Wallet</button>
     </div>
 
-    <div class="wallet-card">
-        <div class="balance-label">Main Account Balance</div>
-        <div class="balance-amount" id="userBalance">0.00 <span style="font-size: 16px;">USDC</span></div>
-        <div id="walletAddress" style="font-size: 11px; color: #848e9c; margin-bottom: 15px;">Not Connected</div>
-        
-        <input type="text" id="toAddress" placeholder="Recipient Address (0x...)">
-        <input type="number" id="sendAmount" placeholder="Amount ($USDC$)">
-        <button class="btn-main" onclick="sendTransaction()">Send Funds</button>
-    </div>
+    <div class="grid-layout">
+        <div class="card">
+            <h3>My Wallet</h3>
+            <div class="balance-box">
+                <div style="font-size: 12px; color: #8b949e;">Your Balance</div>
+                <div class="amt" id="myBalance">0.00 <span style="font-size: 14px;">ARC</span></div>
+                <div id="myAddr" style="font-size: 10px; color: #8b949e; margin-top: 5px; word-break: break-all;">Not Connected</div>
+            </div>
+            
+            <input type="text" id="toAddr" placeholder="Recipient Address (0x...)">
+            <input type="number" id="sendAmt" placeholder="Amount to Send">
+            <button class="btn btn-primary" onclick="sendArc()">Send Funds Now</button>
+        </div>
 
-    <div class="ledger-section">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h4 style="margin: 0;">Recent Transactions</h4>
-            <div style="display: flex; gap: 5px;">
-                <button onclick="exportData('pdf')" style="font-size: 10px; cursor: pointer;">PDF</button>
-                <button onclick="exportData('xlsx')" style="font-size: 10px; cursor: pointer;">Excel</button>
+        <div class="card">
+            <h3>Wallet Checker</h3>
+            <p style="font-size: 12px; color: #8b949e;">Check any wallet balance on Arc Network real-time.</p>
+            <input type="text" id="checkAddr" placeholder="Paste Wallet Address (0x...)">
+            <button class="btn btn-check" onclick="checkAnyWallet()">Check Balance</button>
+            <div id="checkResult" style="margin-top: 15px; padding: 10px; background: #161b22; border-radius: 8px; display: none;">
+                <span style="font-size: 12px;">Result:</span>
+                <div id="checkAmt" style="font-size: 20px; color: #0ecb81; font-weight: bold;">0.00 ARC</div>
             </div>
         </div>
-        <div id="txHistory">
+    </div>
+
+    <div class="ledger-container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3 style="margin: 0;">Transaction Ledger</h3>
+            <div class="export-btns">
+                <button class="ex-small" onclick="exportData('pdf')">PDF</button>
+                <button class="ex-small" onclick="exportData('xlsx')">Excel</button>
             </div>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date & Time</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Transaction ID</th>
+                </tr>
+            </thead>
+            <tbody id="ledgerBody">
+                </tbody>
+        </table>
     </div>
 </div>
 
 <script>
-    let provider, signer, address;
-    const USDC_CONTRACT = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"; // Example Arc USDC, replace with actual from docs
-
-    // Voice setup
-    const speak = (msg) => {
-        const speech = new SpeechSynthesisUtterance(msg);
-        speech.lang = 'hi-IN';
+    let provider, signer, myAddress;
+    
+    // English Voice Function
+    const speak = (text) => {
+        const speech = new SpeechSynthesisUtterance(text);
+        speech.lang = 'en-US';
+        speech.rate = 0.9;
         window.speechSynthesis.speak(speech);
     };
 
-    // Connect Wallet Real-time
+    // Connect Wallet
     document.getElementById('connectBtn').addEventListener('click', async () => {
         if (window.ethereum) {
-            try {
-                provider = new ethers.BrowserProvider(window.ethereum);
-                await provider.send("eth_requestAccounts", []);
-                signer = await provider.getSigner();
-                address = await signer.getAddress();
-                
-                document.getElementById('walletAddress').innerText = address;
-                document.getElementById('connectBtn').innerText = "Connected";
-                updateBalance();
-                speak("वॉलेट सफलतापूर्वक कनेक्ट हो गया है");
-            } catch (err) {
-                console.error(err);
-                alert("Connection failed");
-            }
+            provider = new ethers.BrowserProvider(window.ethereum);
+            const accounts = await provider.send("eth_requestAccounts", []);
+            signer = await provider.getSigner();
+            myAddress = accounts[0];
+            
+            document.getElementById('myAddr').innerText = myAddress;
+            document.getElementById('connectBtn').innerText = "Connected";
+            updateMyBalance();
+            speak("Wallet connected successfully to Arc Network");
         } else {
-            alert("Please install Metamask or Arc Extension");
+            alert("No wallet found. Please use a Web3 browser or extension.");
         }
     });
 
-    async function updateBalance() {
-        const balance = await provider.getBalance(address);
-        document.getElementById('userBalance').innerText = parseFloat(ethers.formatEther(balance)).toFixed(4) + " ARC";
+    async function updateMyBalance() {
+        const bal = await provider.getBalance(myAddress);
+        document.getElementById('myBalance').innerText = parseFloat(ethers.formatEther(bal)).toFixed(4) + " ARC";
     }
 
-    // Real-time Send
-    async function sendTransaction() {
-        const to = document.getElementById('toAddress').value;
-        const amount = document.getElementById('sendAmount').value;
-
-        if(!to || !amount) return alert("Details filled karein");
-
+    // Real-time Wallet Checker
+    async function checkAnyWallet() {
+        const addr = document.getElementById('checkAddr').value;
+        if(!ethers.isAddress(addr)) return alert("Invalid Address");
+        
         try {
-            speak("ट्रांजेक्शन प्रोसेस हो रहा है, कृपया प्रतीक्षा करें");
-            const tx = await signer.sendTransaction({
-                to: to,
-                value: ethers.parseEther(amount)
-            });
-
-            addTxToLedger(tx.hash, amount, 'Send');
-            await tx.wait(); // Waiting for real-time confirmation
-            
-            speak(`सफलतापूर्वक ${amount} टोकन भेज दिए गए हैं`);
-            updateBalance();
-        } catch (err) {
-            alert("Transaction Failed: " + err.message);
+            const bal = await provider.getBalance(addr);
+            const formatted = parseFloat(ethers.formatEther(bal)).toFixed(4);
+            document.getElementById('checkResult').style.display = 'block';
+            document.getElementById('checkAmt').innerText = `${formatted} ARC`;
+            speak(`Balance for this wallet is ${formatted} tokens`);
+        } catch (e) {
+            alert("Error checking balance");
         }
     }
 
-    function addTxToLedger(hash, amount, type) {
-        const container = document.getElementById('txHistory');
-        const date = new Date().toLocaleString();
-        const row = `
-            <div class="tx-row">
-                <div>
-                    <strong>${type}</strong><br>
-                    <span style="font-size:10px; color:#848e9c;">${date}</span>
-                </div>
-                <div style="text-align: right;">
-                    <span class="status-success">${amount} USDC</span><br>
-                    <a href="https://explorer.arc.network/tx/${hash}" target="_blank" class="tx-id">${hash.substring(0,10)}...</a>
-                </div>
-            </div>
-        `;
-        container.insertAdjacentHTML('afterbegin', row);
+    // Send Function
+    async function sendArc() {
+        const to = document.getElementById('toAddr').value;
+        const amt = document.getElementById('sendAmt').value;
+        if(!to || !amt) return;
+
+        try {
+            speak("Initiating transaction. Please confirm in your wallet.");
+            const tx = await signer.sendTransaction({
+                to: to,
+                value: ethers.parseEther(amt)
+            });
+            
+            addToLedger(tx.hash, amt);
+            await tx.wait();
+            speak("Transaction confirmed on the Arc Network.");
+            updateMyBalance();
+        } catch (e) {
+            speak("Transaction failed");
+        }
     }
 
-    // Export Functionality
-    function exportData(format) {
-        if(format === 'pdf') {
+    function addToLedger(hash, amt) {
+        const body = document.getElementById('ledgerBody');
+        const now = new Date().toLocaleString();
+        const row = `
+            <tr>
+                <td>${now}</td>
+                <td style="color:#0ecb81">SEND</td>
+                <td>${amt} ARC</td>
+                <td><a href="https://explorer.arc.network/tx/${hash}" target="_blank" class="tx-link">${hash.substring(0,12)}...</a></td>
+            </tr>
+        `;
+        body.insertAdjacentHTML('afterbegin', row);
+    }
+
+    function exportData(type) {
+        if(type === 'pdf') {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            doc.text("Arc Network Ledger", 10, 10);
-            doc.save("Arc_Statement.pdf");
+            doc.text("Arc Network Transaction Report", 10, 10);
+            doc.save("Arc_Report.pdf");
         } else {
-            alert("Excel export ready - see console");
-            // XLSX implementation for real table data
+            alert("Exporting to Excel...");
         }
     }
 </script>
+
 </body>
 </html>
