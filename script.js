@@ -56,3 +56,8 @@ async function sendTransaction(to, amount) {
         btn.disabled = false;
     }
 }
+if (!ethers.utils.isAddress(recipientAddress)) {
+    console.error("invalid address");
+    // alert ke bajaye ui par red text dikhayein
+    return;
+}
