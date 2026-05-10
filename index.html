@@ -3,81 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArcPro Unified</title>
+    <title>ArcPro Unified Wallet</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <style>
-        :root { --bg: #0f172a; --card: #1e293b; --blue: #3b82f6; }
-        body { background: var(--bg); color: white; font-family: sans-serif; padding: 15px; max-width: 450px; margin: auto; }
-        .card { background: var(--card); padding: 20px; border-radius: 16px; margin-bottom: 15px; border: 1px solid #334155; }
-        .balance-value { font-size: 2.5em; font-weight: 800; color: white; text-align: center; margin: 10px 0; }
-        button { background: var(--blue); color: white; border: none; padding: 14px; border-radius: 12px; width: 100%; font-weight: bold; cursor: pointer; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
-        .status { font-size: 0.8em; color: #10b981; text-align: center; margin-top: 5px; }
+        :root { --bg: #0b0f1a; --card: #161e2d; --blue: #3b82f6; --text: #f1f5f9; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding: 15px; max-width: 450px; margin: auto; }
+        .card { background: var(--card); padding: 20px; border-radius: 16px; margin-bottom: 15px; border: 1px solid #2d3748; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+        .balance-box { text-align: center; padding: 10px 0; }
+        .balance-amount { font-size: 2.8em; font-weight: 800; color: #fff; margin: 5px 0; }
+        button { background: var(--blue); color: white; border: none; padding: 14px; border-radius: 12px; cursor: pointer; width: 100%; font-weight: bold; font-size: 1em; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #2d3748; background: #0b0f1a; color: white; box-sizing: border-box; }
+        .status-pill { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.75em; background: #1e293b; color: #10b981; margin-top: 10px; }
+        .ledger-table { width: 100%; font-size: 0.8em; margin-top: 15px; border-collapse: collapse; }
+        .ledger-table td { padding: 8px; border-bottom: 1px solid #2d3748; }
     </style>
 </head>
 <body>
 
     <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="margin:0; color: var(--blue);">ArcPro</h2>
-        <button id="connectBtn" onclick="connectWallet()" style="width: auto; padding: 8px 15px;">Connect</button>
+        <h2 style="margin:0; color: var(--blue); font-style: italic;">ArcPro</h2>
+        <button id="connectBtn" onclick="connectWallet()" style="width: auto; padding: 8px 16px;">Connect</button>
+    </div>
+
+    <div class="card balance-box">
+        <p style="color: #94a3b8; margin: 0;">Arc Network Balance</p>
+        <div class="balance-amount" id="myBalance">0.00</div>
+        <div class="status-pill" id="walletAddr">Network: Offline</div>
     </div>
 
     <div class="card">
-        <p style="text-align: center; color: #94a3b8; margin: 0;">Main Balance</p>
-        <div class="balance-value" id="myBalance">0.00</div>
-        <p id="walletAddr" class="status">Offline</p>
-    </div>
-
-    <div class="card">
-        <input type="text" id="toAddr" placeholder="Recipient Address">
+        <h3 style="margin:0 0 10px 0;">Send USDC</h3>
+        <input type="text" id="toAddr" placeholder="Recipient Address (0x...)">
         <input type="number" id="sendAmt" placeholder="Amount">
-        <button onclick="sendUSDC()">Send USDC</button>
+        <button onclick="sendUSDC()">Send Now</button>
+    </div>
+
+    <div class="card">
+        <h3 style="margin:0 0 10px 0;">Activity Ledger</h3>
+        <table class="ledger-table">
+            <tbody id="ledgerBody">
+                <tr><td style="color:#94a3b8; text-align:center;">No recent activity</td></tr>
+            </tbody>
+        </table>
     </div>
 
 <script>
 let provider, signer, myAddress;
-const RPC_URL = "https://rpc.arc.network"; // ensure this is your correct testnet rpc
+// Arc Network Specific Details
 const USDC_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"; 
-const USDC_ABI = ["function balanceOf(address) view returns (uint256)", "function decimals() view returns (uint8)", "function transfer(address, uint256) returns (bool)"];
-
-// auto-load balance using rpc even before connecting
-async function loadStaticBalance() {
-    try {
-        const staticProv = new ethers.JsonRpcProvider(RPC_URL);
-        const contract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, staticProv);
-        // replacing with your known address for testing if needed, or wait for connect
-    } catch (e) { console.log("rpc load failed"); }
-}
+const USDC_ABI = [
+    "function balanceOf(address) view returns (uint256)",
+    "function decimals() view returns (uint8)",
+    "function transfer(address, uint256) returns (bool)"
+];
 
 async function connectWallet() {
     if (window.ethereum) {
-        provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await provider.send("eth_requestAccounts", []);
-        signer = await provider.getSigner();
-        myAddress = accounts[0];
-        document.getElementById('walletAddr').innerText = myAddress;
-        updateBalance();
-    } else { alert("use metamask browser"); }
+        try {
+            provider = new ethers.BrowserProvider(window.ethereum);
+            const accounts = await provider.send("eth_requestAccounts", []);
+            signer = await provider.getSigner();
+            myAddress = accounts[0];
+            
+            document.getElementById('walletAddr').innerText = "Linked: " + myAddress.slice(0,6) + "..." + myAddress.slice(-4);
+            document.getElementById('connectBtn').innerText = "Connected";
+            
+            await updateBalance();
+        } catch (e) { alert("Connection failed. Please approve in MetaMask."); }
+    } else { alert("Please open this site inside the MetaMask App Browser."); }
 }
 
 async function updateBalance() {
-    const contract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, provider);
-    const [bal, dec] = await Promise.all([contract.balanceOf(myAddress), contract.decimals()]);
-    document.getElementById('myBalance').innerText = ethers.formatUnits(bal, dec) + " USDC";
+    if (!myAddress) return;
+    try {
+        const contract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, provider);
+        const [bal, dec] = await Promise.all([
+            contract.balanceOf(myAddress),
+            contract.decimals()
+        ]);
+        const formatted = ethers.formatUnits(bal, dec);
+        document.getElementById('myBalance').innerText = parseFloat(formatted).toLocaleString(undefined, {minimumFractionDigits: 2}) + " USDC";
+    } catch (e) { console.error("Balance fetch error", e); }
 }
 
 async function sendUSDC() {
     const to = document.getElementById('toAddr').value;
     const amt = document.getElementById('sendAmt').value;
-    if(!signer) return alert("connect first");
+    if (!signer || !to || !amt) return alert("Please connect wallet and enter details.");
+
     try {
         const contract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);
-        const tx = await contract.transfer(to, ethers.parseUnits(amt.toString(), 6));
+        const dec = await contract.decimals();
+        const tx = await contract.transfer(to, ethers.parseUnits(amt.toString(), dec));
+        
+        // Add to Ledger immediately
+        const row = `<tr><td>${new Date().toLocaleTimeString()}</td><td>Sent</td><td>${amt} USDC</td></tr>`;
+        const ledger = document.getElementById('ledgerBody');
+        if(ledger.innerText.includes("No recent activity")) ledger.innerHTML = "";
+        ledger.insertAdjacentHTML('afterbegin', row);
+
+        alert("Transaction Broadcasted! Hash: " + tx.hash);
         await tx.wait();
         updateBalance();
-    } catch (e) { alert("failed"); }
+    } catch (e) { alert("Transfer Error: " + e.message); }
 }
-loadStaticBalance();
 </script>
 </body>
 </html>
