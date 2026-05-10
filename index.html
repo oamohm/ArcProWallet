@@ -98,31 +98,6 @@
         </table>
     </div>
 </div>
-async function executeSwap() {
-    const amt = document.getElementById('swapAmt').value;
-    const status = document.getElementById('swapStatus');
-    
-    if(!amt || !signer) {
-        return alert("Pehle wallet connect karein aur amount daalein.");
-    }
-
-    try {
-        status.style.display = 'block';
-        status.innerText = "Arc liquidity route se swap ho raha hai...";
-        speak("Initiating swap to Euro Coin. Please confirm in your wallet.");
-
-        // Abhi ke liye simulation, baad mein real App Kit integration
-        setTimeout(() => {
-            status.innerHTML = "✅ Swap Successful! <br> Received: " + (amt * 0.92) + " EURC";
-            speak("Swap complete. Your Euro balance is updated.");
-            updateMyBalance();
-        }, 3000);
-
-    } catch (e) {
-        status.innerText = "Swap fail ho gaya. Network check karein.";
-    }
-}
-
 <script>
     let provider, signer, myAddress, usdcContract;
     
