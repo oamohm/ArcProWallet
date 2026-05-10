@@ -6,32 +6,42 @@
     <title>Arc Pro USDC Wallet</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <style>
-        body { background: #0f172a; color: white; font-family: sans-serif; padding: 20px; }
+        body { background: #0f172a; color: white; font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
         .card { background: #1e293b; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; }
-        button { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; }
-        input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 6px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
-        .status { color: #10b981; font-size: 0.9em; margin-top: 10px; }
+        button { background: #2563eb; color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: bold; }
+        input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
+        .status { color: #10b981; font-size: 0.85em; margin-top: 10px; word-break: break-all; }
+        h3 { margin-top: 0; color: #94a3b8; font-size: 1em; text-transform: uppercase; }
+        .balance-txt { font-size: 2em; margin: 10px 0; font-weight: bold; color: #f8fafc; }
     </style>
 </head>
 <body>
 
     <div class="card">
-        <h2>ArcPro USDC</h2>
-        <button id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
-        <p id="walletAddr" class="status">Not Connected</p>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2>ArcPro USDC</h2>
+            <button id="connectBtn" onclick="connectWallet()" style="width: auto; padding: 8px 15px;">Connect</button>
+        </div>
+        <p id="walletAddr" class="status">Wallet Not Linked</p>
     </div>
 
     <div class="card">
-        <h3>USDC Wallet</h3>
-        <p>Your USDC Balance</p>
-        <h1 id="myBalance">0.0000 USDC</h1>
+        <h3>Your Balance</h3>
+        <div class="balance-txt" id="myBalance">0.00 USDC</div>
+    </div>
+
+    <div class="card">
+        <h3>Send USDC</h3>
+        <input type="text" id="toAddr" placeholder="Recipient Address (0x...)">
+        <input type="number" id="sendAmt" placeholder="Amount to Send">
+        <button onclick="sendUSDC()">Send USDC Now</button>
     </div>
 
     <div class="card">
         <h3>Instant Swap</h3>
         <input type="number" id="swapAmt" placeholder="Amount to Swap">
         <button onclick="executeSwap()" style="background: #f59e0b;">Swap to EURC</button>
-        <p id="swapStatus" style="display:none; margin-top:10px;"></p>
+        <p id="swapStatus" class="status" style="display:none;"></p>
     </div>
 
 <script>
@@ -39,7 +49,8 @@ let provider, signer, myAddress;
 const USDC_ADDRESS = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"; 
 const USDC_ABI = [
     "function balanceOf(address) view returns (uint256)",
-    "function decimals() view returns (uint8)"
+    "function decimals() view returns (uint8)",
+    "function transfer(address, uint256) returns (bool)"
 ];
 
 async function connectWallet() {
@@ -49,11 +60,11 @@ async function connectWallet() {
             const accounts = await provider.send("eth_requestAccounts", []);
             signer = await provider.getSigner();
             myAddress = accounts[0];
-            document.getElementById('walletAddr').innerText = "Connected: " + myAddress.substring(0,6) + "...";
-            document.getElementById('connectBtn').innerText = "Wallet Linked";
+            document.getElementById('walletAddr').innerText = "Connected: " + myAddress;
+            document.getElementById('connectBtn').innerText = "Linked";
             updateMyBalance();
-        } catch (e) { alert("Connection failed"); }
-    } else { alert("MetaMask install karein"); }
+        } catch (e) { alert("Connect fail: " + e.message); }
+    } else { alert("MetaMask download karein"); }
 }
 
 async function updateMyBalance() {
@@ -62,18 +73,33 @@ async function updateMyBalance() {
         const contract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, provider);
         const [bal, dec] = await Promise.all([contract.balanceOf(myAddress), contract.decimals()]);
         const formatted = ethers.formatUnits(bal, dec);
-        document.getElementById('myBalance').innerText = parseFloat(formatted).toFixed(4) + " USDC";
+        document.getElementById('myBalance').innerText = parseFloat(formatted).toFixed(2) + " USDC";
     } catch (e) { console.error(e); }
+}
+
+async function sendUSDC() {
+    const to = document.getElementById('toAddr').value;
+    const amt = document.getElementById('sendAmt').value;
+    if (!to || !amt || !signer) return alert("Details check karein");
+    
+    try {
+        const contract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);
+        const dec = await contract.decimals();
+        const tx = await contract.transfer(to, ethers.parseUnits(amt, dec));
+        alert("Transaction Sent! Hash: " + tx.hash);
+        await tx.wait();
+        alert("Transfer Successful");
+        updateMyBalance();
+    } catch (e) { alert("Transfer fail: " + e.message); }
 }
 
 async function executeSwap() {
     const amt = document.getElementById('swapAmt').value;
     const status = document.getElementById('swapStatus');
-    if(!amt || !signer) return alert("Pehle wallet connect karein");
+    if(!amt || !signer) return alert("Pehle connect karein");
 
     status.style.display = 'block';
-    status.innerText = "Processing swap on Arc Network...";
-    
+    status.innerText = "Processing Arc Liquidity Swap...";
     setTimeout(() => {
         status.innerHTML = "✅ Swap Successful! <br> Received: " + (amt * 0.92) + " EURC";
         updateMyBalance();
