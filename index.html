@@ -67,6 +67,14 @@
                 <div id="checkAmt" style="font-size: 20px; color: #0ecb81; font-weight: bold;">0.00 USDC</div>
             </div>
         </div>
+                <div class="card">
+            <h3>Instant Swap</h3>
+            <p style="font-size: 12px; color: #8b949e;">Swap USDC to EURC instantly on Arc.</p>
+            <input type="number" id="swapAmt" placeholder="Amount to Swap">
+            <button class="btn btn-primary" onclick="executeSwap()" style="background: #ff7b00; border: none;">Swap to EURC</button>
+            <div id="swapStatus" style="margin-top: 10px; font-size: 11px; color: #8b949e;"></div>
+        </div>
+
     </div>
 
     <div class="ledger-container">
