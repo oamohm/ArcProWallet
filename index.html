@@ -3,67 +3,99 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arc Pro | Multi-Asset Router</title>
+    <title>Arc Pro Wallet | Universal Multi-Asset Router</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <style>
-        :root { --primary: #3b82f6; --bg: #05070a; --card: rgba(22, 30, 45, 0.7); --text: #f1f5f9; --accent: #10b981; --warn: #f59e0b; }
+        :root { --primary: #3b82f6; --bg: #05070a; --card: rgba(22, 30, 45, 0.7); --text: #f1f5f9; --accent: #10b981; --dark-gray: #111827; }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; padding: 15px; margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         .app-container { width: 100%; max-width: 450px; }
+        
+        /* Header & Identity */
         .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
-        .card { background: var(--card); border-radius: 24px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .balance-hero { text-align: center; padding: 10px 0; }
-        .balance-hero h1 { font-size: 3.2em; margin: 0; letter-spacing: -2px; }
-        .addr-chip { background: rgba(16, 185, 129, 0.1); color: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 0.7em; font-family: monospace; border: 1px solid var(--accent); display: inline-block; margin-top: 8px; }
-        .btn { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 16px; width: 100%; font-weight: 700; cursor: pointer; transition: 0.3s; font-size: 0.95em; }
-        .btn:active { transform: scale(0.98); }
-        .tab-bar { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 15px; }
-        .tab-btn { background: rgba(255,255,255,0.05); color: #94a3b8; border: none; padding: 10px; border-radius: 12px; font-size: 0.75em; cursor: pointer; }
-        .tab-btn.active { background: var(--primary); color: white; }
-        input { width: 100%; padding: 16px; margin: 8px 0; border-radius: 14px; border: 1px solid #2d3748; background: #000; color: #fff; box-sizing: border-box; font-size: 1em; }
-        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.8em; }
-        .status-tag { font-size: 0.7em; padding: 2px 6px; border-radius: 4px; background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .logo { font-weight: 900; letter-spacing: -1.5px; font-size: 1.5em; }
+        
+        /* Profile & Network Section */
+        .profile-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+        .network-chip { background: #1e293b; border: 1px solid #334155; padding: 6px 12px; border-radius: 20px; font-size: 0.7em; cursor: pointer; }
+        
+        /* Main Card */
+        .card { background: var(--card); border-radius: 28px; padding: 24px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; backdrop-filter: blur(20px); position: relative; overflow: hidden; }
+        .balance-label { color: #94a3b8; font-size: 0.75em; text-transform: uppercase; letter-spacing: 1px; text-align: center; }
+        .balance-value { font-size: 3.5em; font-weight: 800; text-align: center; margin: 5px 0; background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        /* Action Tabs */
+        .tab-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+        .tab-btn { background: rgba(255,255,255,0.05); color: #94a3b8; border: none; padding: 12px 5px; border-radius: 16px; font-size: 0.7em; cursor: pointer; transition: 0.3s; }
+        .tab-btn.active { background: var(--primary); color: white; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }
+        
+        /* Input & Controls */
+        input, select { width: 100%; padding: 18px; margin: 10px 0; border-radius: 16px; border: 1px solid #1f2937; background: #000; color: white; box-sizing: border-box; font-size: 0.95em; outline: none; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 20px; width: 100%; font-weight: 700; cursor: pointer; font-size: 1em; }
+        
+        /* Ledger & History */
+        .ledger-box { max-height: 250px; overflow-y: auto; }
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .tx-icon { width: 35px; height: 35px; border-radius: 10px; background: rgba(59, 130, 246, 0.1); display: flex; align-items: center; justify-content: center; margin-right: 12px; }
+        
+        /* Social/Eco Grid */
+        .eco-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+        .eco-item { background: #111827; border: 1px solid #1f2937; padding: 15px; border-radius: 14px; text-align: center; text-decoration: none; color: #94a3b8; font-size: 0.7em; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header">
-        <h2 style="margin:0; font-weight: 800; letter-spacing: -1px;">ARCFLOW <span style="color:var(--primary); font-weight: 300;">PRO</span></h2>
-        <button class="btn" id="connectBtn" onclick="connectWallet()" style="width:auto; padding: 8px 16px; font-size: 0.8em;">Connect</button>
+        <div class="logo">ARC<span style="color:var(--primary); font-weight: 300;">PRO</span></div>
+        <button class="btn-main" id="connectBtn" onclick="connectWallet()" style="width:auto; padding: 8px 20px; font-size:0.8em; border-radius: 12px;">Link Core</button>
+    </div>
+
+    <div class="profile-row">
+        <div id="statusIndicator" style="font-size:0.7em; color:#ef4444;">● Disconnected</div>
+        <div class="network-chip">Arc Testnet ▾</div>
     </div>
 
     <div class="card">
-        <div class="balance-hero">
-            <div style="color: #94a3b8; font-size: 0.75em; text-transform: uppercase;">Total Liquidity</div>
-            <h1 id="myBalance">0.0000</h1>
-            <div id="walletAddr" class="addr-chip">Network Disconnected</div>
-            <div style="margin-top:15px;"><button class="tab-btn" onclick="updateBalance()" style="padding: 5px 15px;">↻ Sync Engine</button></div>
+        <div class="balance-label">Total Portfolio</div>
+        <div class="balance-value" id="dispBal">0.0000</div>
+        <div id="addrDisplay" style="text-align:center; font-family:monospace; font-size:0.65em; color:var(--accent); opacity: 0.7;">No Identity Detected</div>
+        <div style="display:flex; justify-content:center; gap:10px; margin-top:15px;">
+            <button class="network-chip" onclick="syncAll()">↻ Sync Engine</button>
         </div>
     </div>
 
     <div class="tab-bar">
-        <button class="tab-btn active">Transfer</button>
-        <button class="tab-btn" onclick="alert('Swap Engine Initializing...')">Swap</button>
-        <button class="tab-btn" onclick="alert('Bridge Layer scanning...')">Bridge</button>
+        <button class="tab-btn active" id="tab-send" onclick="setMode('send')">Send</button>
+        <button class="tab-btn" id="tab-swap" onclick="setMode('swap')">Swap</button>
+        <button class="tab-btn" id="tab-pool" onclick="setMode('pool')">Pools</button>
+        <button class="tab-btn" id="tab-bridge" onclick="setMode('bridge')">Bridge</button>
     </div>
 
     <div class="card">
-        <h4 style="margin:0 0 10px 0; font-size: 0.8em; opacity: 0.6;">DETERMINISTIC SETTLEMENT</h4>
-        <input type="text" id="toAddr" placeholder="Recipient (0x...)">
-        <input type="number" id="sendAmt" placeholder="Amount (USDC)">
-        <button class="btn" id="processBtn" onclick="sendTransaction()">Execute Settlement</button>
-    </div>
-
-    <div class="card">
-        <h4 style="margin:0 0 12px 0; font-size: 0.8em; opacity: 0.5;">LEDGER ACTIVITY</h4>
-        <div id="historyContainer" style="max-height: 200px; overflow-y: auto;">
-            <div style="text-align:center; padding: 20px; opacity: 0.3; font-size: 0.8em;">No recent coordination detected</div>
+        <h4 id="actionLabel" style="margin:0 0 15px 0; font-size: 0.85em; color: var(--primary);">NATIVE ROUTER</h4>
+        <div id="actionFields">
+            <input type="text" id="target" placeholder="Recipient Address (0x...)">
+            <input type="number" id="amt" placeholder="Amount (USDC)">
         </div>
+        <button class="btn-main" id="mainActionBtn" onclick="executeEngine()">Initialize Settlement</button>
+    </div>
+
+    <div class="card" style="padding-top: 15px;">
+        <h4 style="margin:0 0 15px 0; font-size: 0.75em; opacity: 0.5; letter-spacing: 1px;">LEDGER RECORDS</h4>
+        <div id="ledgerBody" class="ledger-box">
+            <div style="text-align:center; padding: 20px; opacity: 0.3; font-size: 0.8em;">No coordination detected</div>
+        </div>
+    </div>
+
+    <div class="eco-grid">
+        <a href="#" class="eco-item">Docs</a>
+        <a href="#" class="eco-item">Circle</a>
+        <a href="#" class="eco-item">House</a>
     </div>
 </div>
 
 <script>
-let provider, signer, myAddress;
+let provider, signer, walletID, currentMode = 'send';
 
 async function connectWallet() {
     if (window.ethereum) {
@@ -71,93 +103,91 @@ async function connectWallet() {
             provider = new ethers.BrowserProvider(window.ethereum);
             const accounts = await provider.send("eth_requestAccounts", []);
             signer = await provider.getSigner();
-            myAddress = accounts[0];
+            walletID = accounts[0];
             
             document.getElementById('connectBtn').innerText = "Linked";
-            document.getElementById('walletAddr').innerText = `ID: ${myAddress.slice(0,6)}...${myAddress.slice(-4)}`;
-            await updateBalance();
-            loadHistory();
+            document.getElementById('statusIndicator').innerHTML = "● Arc Node Active";
+            document.getElementById('statusIndicator').style.color = "#10b981";
+            document.getElementById('addrDisplay').innerText = `ID: ${walletID.slice(0,8)}...${walletID.slice(-6)}`;
+            
+            await syncAll();
+            loadPersistentLogs();
         } catch (e) { console.error(e); }
-    } else { alert("Please install MetaMask"); }
+    }
 }
 
-async function updateBalance() {
-    if (!myAddress) return;
-    try {
-        const balance = await provider.getBalance(myAddress);
-        document.getElementById('myBalance').innerText = parseFloat(ethers.formatEther(balance)).toFixed(4);
-    } catch (e) { console.error(e); }
+async function syncAll() {
+    if (!walletID) return;
+    const bal = await provider.getBalance(walletID);
+    document.getElementById('dispBal').innerText = parseFloat(ethers.formatEther(bal)).toFixed(4);
 }
 
-async function sendTransaction() {
-    const to = document.getElementById('toAddr').value;
-    const amount = document.getElementById('sendAmt').value;
-    const btn = document.getElementById('processBtn');
+function setMode(mode) {
+    currentMode = mode;
+    const tabs = ['send', 'swap', 'pool', 'bridge'];
+    tabs.forEach(t => document.getElementById(`tab-${t}`).classList.remove('active'));
+    document.getElementById(`tab-${mode}`).classList.add('active');
+    
+    const label = {send: 'NATIVE ROUTER', swap: 'LIQUIDITY SWAP', pool: 'ASSET POOLS', bridge: 'GATEWAY BRIDGE'};
+    document.getElementById('actionLabel').innerText = label[mode];
+    document.getElementById('mainActionBtn').innerText = `Execute ${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+}
 
-    if (!to || !amount) return alert("Missing Parameters");
+async function executeEngine() {
+    if (!signer) return alert("Link Wallet First");
+    const target = document.getElementById('target').value;
+    const val = document.getElementById('amt').value;
+    if (!target || !val) return;
 
     try {
-        btn.disabled = true;
-        btn.innerText = "Coordinating...";
+        const btn = document.getElementById('mainActionBtn');
+        btn.disabled = true; btn.innerText = "Coordinating...";
         
-        const tx = await signer.sendTransaction({
-            to: to,
-            value: ethers.parseEther(amount)
-        });
-
-        // Add temporary history entry
-        addHistoryItem(tx.hash, amount, "Pending");
+        const tx = await signer.sendTransaction({ to: target, value: ethers.parseEther(val) });
         
+        addLog(currentMode, val, tx.hash);
         await tx.wait();
         
-        alert("Settlement Finalized");
-        saveHistory(tx.hash, amount); // Persistent save
-        await updateBalance();
-        loadHistory(); 
-    } catch (e) {
-        alert("Settlement Aborted");
-        console.error(e);
-    } finally {
+        alert(`${currentMode} Settlement Finalized`);
+        await syncAll();
         btn.disabled = false;
-        btn.innerText = "Execute Settlement";
+        setMode(currentMode);
+    } catch (e) { 
+        console.error(e); 
+        btn.disabled = false; 
+        btn.innerText = "Retry Transaction";
     }
 }
 
-function addHistoryItem(hash, amt, status) {
-    const container = document.getElementById('historyContainer');
-    if (container.innerHTML.includes("No recent")) container.innerHTML = "";
+function addLog(type, amt, hash) {
+    let logs = JSON.parse(localStorage.getItem('arc_v2_logs') || '[]');
+    logs.push({ type: type.toUpperCase(), val: amt, id: hash.slice(0,12), date: new Date().toLocaleTimeString() });
+    localStorage.setItem('arc_v2_logs', JSON.stringify(logs));
+    renderLogs();
+}
+
+function renderLogs() {
+    const box = document.getElementById('ledgerBody');
+    let logs = JSON.parse(localStorage.getItem('arc_v2_logs') || '[]');
+    if (logs.length === 0) return;
     
-    const html = `
+    box.innerHTML = logs.reverse().map(l => `
         <div class="history-item">
-            <div>
-                <div style="font-weight:bold">Transfer</div>
-                <div style="opacity:0.5; font-size:0.8em">${hash.slice(0,12)}...</div>
+            <div style="display:flex; align-items:center;">
+                <div class="tx-icon">⚡</div>
+                <div><b>${l.type}</b><br><small style="opacity:0.4">${l.id}...</small></div>
             </div>
             <div style="text-align:right">
-                <div>${amt} ETH</div>
-                <span class="status-tag">${status}</span>
+                <div style="font-weight:700; color:var(--primary)">${l.val} USDC</div>
+                <div style="font-size:0.7em; opacity:0.5">${l.date}</div>
             </div>
         </div>
-    `;
-    container.insertAdjacentHTML('afterbegin', html);
+    `).join('');
 }
 
-function saveHistory(hash, amt) {
-    let history = JSON.parse(localStorage.getItem('arcHistory') || '[]');
-    history.push({ hash, amt, time: new Date().toLocaleTimeString() });
-    localStorage.setItem('arcHistory', JSON.stringify(history));
-}
-
-function loadHistory() {
-    const container = document.getElementById('historyContainer');
-    let history = JSON.parse(localStorage.getItem('arcHistory') || '[]');
-    if (history.length > 0) {
-        container.innerHTML = "";
-        history.reverse().forEach(item => {
-            addHistoryItem(item.hash, item.amt, "Confirmed");
-        });
-    }
-}
+function loadPersistentLogs() { renderLogs(); }
+window.onload = loadPersistentLogs;
 </script>
+
 </body>
 </html>
