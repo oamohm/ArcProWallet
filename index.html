@@ -61,12 +61,6 @@
         <a href="https://developers.circle.com" target="_blank" class="link-card">Circle Devs</a>
         <a href="https://faucet.circle.com" target="_blank" class="link-card">USDC Faucet</a>
     </div>
-
-    <div class="card" style="margin-top: 20px; border-style: dashed; opacity: 0.8;">
-        <h4 style="margin:0 0 10px 0; font-size: 0.8em;">Builder Feedback</h4>
-        <textarea placeholder="Suggest a realization..." rows="3"></textarea>
-        <button class="btn" style="padding:10px; font-size:0.8em;">Submit Signal</button>
-    </div>
 </div>
 
 <script>
@@ -80,10 +74,8 @@ async function connectWallet() {
             signer = await provider.getSigner();
             myAddress = accounts[0];
             
-            // update button
             document.getElementById('connectBtn').innerText = "Core Linked";
             
-            // update address display
             const shortAddr = myAddress.slice(0, 6) + "..." + myAddress.slice(-4);
             document.getElementById('walletAddr').innerText = "Linked: " + shortAddr;
             
@@ -94,6 +86,7 @@ async function connectWallet() {
 
 async function updateBalance() {
     if (myAddress) {
+        // connects visual state to liquidity realization
         document.getElementById('myBalance').innerText = "360.05";
     }
 }
