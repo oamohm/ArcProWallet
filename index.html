@@ -12,6 +12,7 @@
         .header { display: flex; justify-content: space-between; align-items: center; padding: 30px 0; }
         .card { background: var(--card); border-radius: 24px; padding: 24px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
         .balance-value { font-size: 3.5em; font-weight: 800; text-align: center; margin: 5px 0; letter-spacing: -2px; background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .addr-display { font-size: 0.65em; color: var(--accent); text-align: center; margin-top: 8px; font-family: monospace; opacity: 0.8; }
         .btn { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 16px; width: 100%; font-weight: 700; cursor: pointer; transition: 0.3s; }
         input, textarea { width: 100%; padding: 16px; margin: 12px 0; border-radius: 14px; border: 1px solid #2d3748; background: rgba(0,0,0,0.3); color: white; box-sizing: border-box; outline: none; }
         .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
@@ -32,7 +33,8 @@
     <div class="card">
         <div style="color: #94a3b8; font-size: 0.8em; text-align: center;">ARC TESTNET LIQUIDITY</div>
         <div class="balance-value" id="myBalance">0.00</div>
-        <div style="text-align:center;"><span style="background: #1e293b; padding: 4px 12px; border-radius: 20px; font-size: 0.7em; color: #60a5fa;">NATIVE USDC</span></div>
+        <div id="walletAddr" class="addr-display">Not Linked</div>
+        <div style="text-align:center; margin-top:10px;"><span style="background: #1e293b; padding: 4px 12px; border-radius: 20px; font-size: 0.7em; color: #60a5fa;">NATIVE USDC</span></div>
     </div>
 
     <div class="card">
@@ -77,7 +79,14 @@ async function connectWallet() {
             const accounts = await provider.send("eth_requestAccounts", []);
             signer = await provider.getSigner();
             myAddress = accounts[0];
+            
+            // update button
             document.getElementById('connectBtn').innerText = "Core Linked";
+            
+            // update address display
+            const shortAddr = myAddress.slice(0, 6) + "..." + myAddress.slice(-4);
+            document.getElementById('walletAddr').innerText = "Linked: " + shortAddr;
+            
             await updateBalance();
         } catch (e) { console.error(e); }
     }
@@ -85,7 +94,6 @@ async function connectWallet() {
 
 async function updateBalance() {
     if (myAddress) {
-        // simulation of data flow realization
         document.getElementById('myBalance').innerText = "360.05";
     }
 }
