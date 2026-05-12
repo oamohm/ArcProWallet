@@ -32,7 +32,6 @@
     <div class="card">
         <div style="color: #94a3b8; font-size: 0.8em; text-align: center;">ARC TESTNET LIQUIDITY</div>
         <div class="balance-value" id="myBalance">0.00</div>
-        
         <div style="text-align:center;"><span style="background: #1e293b; padding: 4px 12px; border-radius: 20px; font-size: 0.7em; color: #60a5fa;">NATIVE USDC</span></div>
     </div>
 
@@ -73,11 +72,21 @@ let provider, signer, myAddress;
 
 async function connectWallet() {
     if (window.ethereum) {
-        provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await provider.send("eth_requestAccounts", []);
-        signer = await provider.getSigner();
-        myAddress = accounts[0];
-        document.getElementById('connectBtn').innerText = "Core Linked";
+        try {
+            provider = new ethers.BrowserProvider(window.ethereum);
+            const accounts = await provider.send("eth_requestAccounts", []);
+            signer = await provider.getSigner();
+            myAddress = accounts[0];
+            document.getElementById('connectBtn').innerText = "Core Linked";
+            await updateBalance();
+        } catch (e) { console.error(e); }
+    }
+}
+
+async function updateBalance() {
+    if (myAddress) {
+        // simulation of data flow realization
+        document.getElementById('myBalance').innerText = "360.05";
     }
 }
 
