@@ -43,35 +43,25 @@
       </div>
     </div>
 
-    <!-- SEND ASSET -->
     <div class="card">
       <strong style="display:flex;align-items:center;gap:8px;">↗ SEND ASSET</strong>
-      
-      <select id="asset">
-        <option>USDC (Stablecoin)</option>
-      </select>
-
+      <select id="asset"><option>USDC (Stablecoin)</option></select>
       <input type="text" id="recipient" placeholder="Recipient address (0x...)" />
-
       <div>Quick Amount:</div>
       <div class="quick">
         <button onclick="setAmount(10)">10</button>
         <button onclick="setAmount(50)">50</button>
         <button onclick="setAmount(100)">100</button>
       </div>
-
       <input type="number" id="amount" value="0.00" step="0.01" />
-
       <button onclick="sendUSDC()">Confirm Send</button>
     </div>
 
-    <!-- Transaction History (Real-time) -->
     <div class="card">
       <strong>Recent Transactions</strong>
       <div id="txHistory" style="margin-top:12px; max-height:320px; overflow-y:auto;"></div>
     </div>
 
-    <!-- Ecosystem -->
     <div class="card">
       <strong>ECOSYSTEM & SOCIALS</strong>
       <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;">
@@ -88,11 +78,8 @@
     </div>
   </div>
 
-  <!-- Music -->
   <div id="musicToggle" onclick="toggleMusic()">♪</div>
-  <audio id="bgMusic" loop>
-    <source src="https://assets.mixkit.co/sfx/preview/123/123.wav" type="audio/wav">
-  </audio>
+  <audio id="bgMusic" loop><source src="https://assets.mixkit.co/sfx/preview/123/123.wav" type="audio/wav"></audio>
 
   <script>
     let provider, signer, userAddress;
@@ -101,7 +88,7 @@
     const ARC_TESTNET = {
       chainId: "0x4cef52",
       chainName: "Arc Testnet",
-      nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 }, // Important fix
+      nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
       rpcUrls: ["https://rpc.testnet.arc.network"],
       blockExplorerUrls: ["https://testnet.arcscan.app"]
     };
@@ -116,11 +103,13 @@
         provider = new ethers.providers.Web3Provider(window.ethereum);
         signer = provider.getSigner();
 
-        // Network switch
         const currentChain = await window.ethereum.request({ method: 'eth_chainId' });
         if (currentChain !== ARC_TESTNET.chainId) {
-          try { await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: ARC_TESTNET.chainId }]}); }
-          catch (e) { if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [ARC_TESTNET] }); }
+          try {
+            await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: ARC_TESTNET.chainId }] });
+          } catch (e) {
+            if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [ARC_TESTNET] });
+          }
         }
 
         btn.innerText = userAddress.slice(0,6) + "..." + userAddress.slice(-4);
@@ -129,7 +118,7 @@
         document.getElementById("status").classList.add("connected");
 
         getBalance();
-        addTxToHistory("Connected", "0", userAddress);
+        addTxToHistory("Wallet Connected", "0", userAddress);
       } catch (error) {
         alert("Connect failed: " + error.message);
         resetBtn();
@@ -145,7 +134,7 @@
       if (!provider || !userAddress) return;
       try {
         const bal = await provider.getBalance(userAddress);
-        const usdcBal = (parseFloat(bal) / 1e18).toFixed(4); // 18 decimals
+        const usdcBal = (parseFloat(bal) / 1e18).toFixed(4);
         document.getElementById("balanceDisplay").innerText = usdcBal + " USDC";
       } catch(e) {}
     }
@@ -155,23 +144,24 @@
     async function sendUSDC() {
       if (!signer) { alert("Pehle Connect karo"); return; }
       const to = document.getElementById("recipient").value.trim();
-      const amtStr = document.getElementById("amount").value;
+      const amt = document.getElementById("amount").value;
 
-      if (!ethers.utils.isAddress(to)) { alert("Sahih address daalo"); return; }
-      if (parseFloat(amtStr) <= 0) { alert("Amount daalo"); return; }
+      if (!ethers.utils.isAddress(to)) { alert("Sahih recipient address daalo"); return; }
+      if (parseFloat(amt) <= 0) { alert("Valid amount daalo"); return; }
 
       try {
         const tx = await signer.sendTransaction({
           to: to,
-          value: ethers.utils.parseUnits(amtStr, 18)   // Fixed: 18 decimals
+          value: ethers.utils.parseUnits(amt, 18),
+          gasLimit: 21000   // Explicit gas for native transfer
         });
 
-        addTxToHistory(tx.hash, amtStr, to);
-        alert(`✅ Transaction Successful!\nHash: ${tx.hash}\n\nCheck on Explorer →`);
-        
-        setTimeout(getBalance, 4000); // Real-time balance update
+        addTxToHistory(tx.hash, amt, to);
+        alert(`✅ Transaction Successful!\n\nHash: ${tx.hash}\n\nExplorer: https://testnet.arcscan.app/tx/${tx.hash}`);
+        setTimeout(getBalance, 3000);
       } catch (e) {
-        alert("Send failed: " + (e.message || "Try again after some time"));
+        console.error(e);
+        alert("Send failed: " + (e.message || "Insufficient gas or network issue. Faucet se aur USDC le lo."));
       }
     }
 
@@ -193,7 +183,7 @@
         <div class="tx">
           <div><strong>${tx.time}</strong> • ${tx.amount} USDC</div>
           <div style="color:#888;">→ ${tx.to}</div>
-          ${tx.hash.startsWith('0x') ? `<a href="https://testnet.arcscan.app/tx/${tx.hash}" target="_blank" style="color:#60a5fa;font-size:12px;">View on Explorer</a>` : ''}
+          ${tx.hash.startsWith('0x') ? `<a href="https://testnet.arcscan.app/tx/${tx.hash}" target="_blank" style="color:#60a5fa;">View Explorer</a>` : ''}
         </div>
       `).join('');
     }
