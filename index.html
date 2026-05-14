@@ -3,117 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arc Pro | Universal Settlement Node</title>
+    <title>Arc Pro Wallet | Settlement Node</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --primary: #3b82f6; --bg: #020408; --card: rgba(15, 23, 42, 0.7); --text: #f8fafc; --border: rgba(255, 255, 255, 0.08); }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 15px; overflow-x: hidden; }
+        :root { --primary: #3b82f6; --bg: #02040a; --card: rgba(15, 23, 42, 0.9); --text: #ffffff; --border: rgba(255, 255, 255, 0.08); }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; min-height: 100vh; overflow-x: hidden; }
         
-        .glass-container { width: 100%; max-width: 420px; animation: fadeIn 0.8s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
+        .app-shell { width: 100%; max-width: 430px; height: 100vh; display: flex; flex-direction: column; position: relative; }
+        
         /* Header */
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 25px 5px; }
-        .brand { font-weight: 900; font-size: 1.4em; letter-spacing: -1px; text-transform: uppercase; }
-        .node-status { font-size: 0.65em; background: rgba(59, 130, 246, 0.1); color: var(--primary); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(59, 130, 246, 0.2); display: flex; align-items: center; gap: 6px; }
-        .dot { width: 6px; height: 6px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 8px var(--primary); }
+        .header { padding: 25px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-weight: 900; font-size: 1.2em; letter-spacing: -1px; }
+        .node-badge { font-size: 0.65em; background: rgba(59, 130, 246, 0.1); color: var(--primary); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(59, 130, 246, 0.2); font-weight: 700; }
 
-        /* Portfolio Card */
-        .main-card { background: var(--card); border-radius: 32px; padding: 30px 20px; border: 1px solid var(--border); backdrop-filter: blur(20px); text-align: center; margin-bottom: 15px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-        .bal-label { color: #64748b; font-size: 0.7em; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
-        .bal-value { font-size: 3.5em; font-weight: 800; margin: 10px 0; background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .address-box { background: rgba(0,0,0,0.3); padding: 8px 16px; border-radius: 12px; font-family: monospace; font-size: 0.7em; color: #94a3b8; cursor: pointer; border: 1px solid var(--border); display: inline-block; }
+        /* Balance Section (Graph Style) */
+        .portfolio-section { padding: 20px; text-align: center; flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .balance-circle { width: 220px; height: 220px; border: 8px solid #1e293b; border-top: 8px solid var(--primary); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; box-shadow: 0 0 30px rgba(59, 130, 246, 0.15); }
+        .bal-label { color: #64748b; font-size: 0.7em; font-weight: 700; margin-bottom: 5px; }
+        .bal-value { font-size: 3em; font-weight: 800; }
+        .address-pill { margin-top: 20px; background: #111827; border: 1px solid var(--border); padding: 8px 15px; border-radius: 12px; font-size: 0.7em; font-family: monospace; color: #94a3b8; cursor: pointer; }
 
-        /* Tab Navigation */
-        .nav-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-        .nav-item { background: #0f172a; border: 1px solid var(--border); padding: 14px 5px; border-radius: 18px; cursor: pointer; text-align: center; transition: 0.3s; }
-        .nav-item.active { background: var(--primary); border-color: var(--primary); box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2); }
-        .nav-item span { font-size: 0.6em; font-weight: 800; color: #475569; }
-        .nav-item.active span { color: white; }
+        /* Panel Container */
+        .panel-card { background: var(--card); border-radius: 32px 32px 0 0; padding: 25px; border-top: 1px solid var(--border); backdrop-filter: blur(20px); margin-top: auto; padding-bottom: 100px; }
+        .panel-title { font-size: 0.9em; font-weight: 800; margin-bottom: 20px; color: var(--primary); text-transform: uppercase; }
 
-        /* Action Panel */
-        .action-panel { background: var(--card); border-radius: 28px; padding: 24px; border: 1px solid var(--border); min-height: 280px; }
-        .panel-title { font-size: 0.85em; font-weight: 700; margin-bottom: 20px; color: var(--primary); display: flex; align-items: center; gap: 8px; }
-        
-        input { width: 100%; background: #000; border: 1px solid var(--border); padding: 18px; border-radius: 16px; color: white; box-sizing: border-box; margin-bottom: 12px; font-size: 0.9em; outline: none; transition: 0.2s; }
+        /* Inputs */
+        .field { margin-bottom: 15px; }
+        label { display: block; font-size: 0.65em; font-weight: 700; color: #475569; margin-bottom: 8px; margin-left: 5px; }
+        input { width: 100%; background: #000; border: 1px solid var(--border); padding: 16px; border-radius: 16px; color: white; box-sizing: border-box; font-size: 0.9em; outline: none; }
         input:focus { border-color: var(--primary); }
-        .btn-exec { background: var(--primary); color: white; border: none; width: 100%; padding: 18px; border-radius: 18px; font-weight: 800; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .btn-exec:active { transform: scale(0.98); }
+        .btn-main { background: var(--primary); color: white; border: none; width: 100%; padding: 18px; border-radius: 18px; font-weight: 800; font-size: 1em; cursor: pointer; margin-top: 10px; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2); }
 
-        /* Menu Rows */
-        .menu-row { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 16px; margin-bottom: 8px; border: 1px solid transparent; cursor: pointer; }
-        .menu-row:hover { border-color: var(--primary); }
-        .menu-label { font-size: 0.85em; font-weight: 500; }
-        .menu-val { font-size: 0.75em; color: #64748b; font-weight: 600; }
+        /* Bottom Navigation (Like Pawan Bhai's) */
+        .bottom-nav { position: absolute; bottom: 0; width: 100%; height: 80px; background: #0a0f1a; border-top: 1px solid var(--border); display: grid; grid-template-columns: repeat(4, 1fr); align-items: center; }
+        .nav-link { text-align: center; color: #475569; cursor: pointer; transition: 0.3s; display: flex; flex-direction: column; gap: 5px; }
+        .nav-link.active { color: var(--primary); }
+        .nav-link i { font-size: 1.2em; }
+        .nav-link span { font-size: 0.6em; font-weight: 700; }
 
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="glass-container">
+<div class="app-shell">
     <div class="header">
-        <div class="brand">ARC<span style="font-weight:300; opacity:0.7;">PRO</span></div>
-        <div class="node-status"><div class="dot"></div> ARC NODE 01</div>
+        <div class="logo">ARC<span style="font-weight:300; opacity:0.6;">PRO</span></div>
+        <div class="node-badge">ARC NODE 01 ACTIVE</div>
     </div>
 
-    <div class="main-card">
-        <div class="bal-label">Settlement Balance (USDC)</div>
-        <div class="bal-value" id="dispBal">1.00</div>
-        <div class="address-box" id="connBtn" onclick="connect()">Connect Wallet</div>
+    <div class="portfolio-section" id="view-wallet">
+        <div class="balance-circle">
+            <div class="bal-label">BALANCE (USDC)</div>
+            <div class="bal-value" id="liveBal">1.00</div>
+        </div>
+        <div class="address-pill" id="walletAddr" onclick="connect()">Connect Settlement Node</div>
     </div>
 
-    <div class="nav-bar">
-        <div class="nav-item active" id="btn-send" onclick="tab('send')"><span>SEND</span></div>
-        <div class="nav-item" id="btn-swap" onclick="tab('swap')"><span>SWAP</span></div>
-        <div class="nav-item" id="btn-security" onclick="tab('security')"><span>SECURITY</span></div>
-        <div class="nav-item" id="btn-config" onclick="tab('config')"><span>CONFIG</span></div>
+    <div class="panel-card">
+        <div id="content-send">
+            <div class="panel-title">Native Router</div>
+            <div class="field">
+                <label>RECIPIENT ADDRESS</label>
+                <input type="text" id="target" placeholder="0x...">
+            </div>
+            <div class="field">
+                <label>SETTLEMENT AMOUNT</label>
+                <input type="number" id="amt" placeholder="0.00">
+            </div>
+            <button class="btn-main" onclick="tx()">Authorize Route</button>
+        </div>
+
+        <div id="content-security" class="hidden">
+            <div class="panel-title">Security & Privacy</div>
+            <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:15px; margin-bottom:10px; cursor:pointer;" onclick="alert('Phrase: Hidden for security')">
+                <div style="font-size:0.8em;">Reveal Recovery Phrase</div>
+                <div style="font-size:0.6em; color:var(--primary);">Securely back up your node</div>
+            </div>
+            <div style="background:rgba(0,0,0,0.3); padding:15px; border-radius:15px; cursor:pointer;">
+                <div style="font-size:0.8em;">Advanced Encryption</div>
+                <div style="font-size:0.6em; color:var(--primary);">Biometric node access enabled</div>
+            </div>
+        </div>
     </div>
 
-    <div class="action-panel">
-        <div class="panel-title" id="panelTitle">NATIVE SETTLEMENT</div>
-        
-        <div id="view-send">
-            <input type="text" placeholder="Recipient (0x...)" id="target">
-            <input type="number" placeholder="Amount" id="amt">
-            <button class="btn-exec" onclick="process()">Authorize Route</button>
+    <div class="bottom-nav">
+        <div class="nav-link active" onclick="show('send')">
+            <i class="fas fa-wallet"></i>
+            <span>WALLET</span>
         </div>
-
-        <div id="view-swap" class="hidden">
-            <input type="text" value="USDC (Arc)" disabled style="opacity:0.5;">
-            <div style="text-align:center; margin-bottom:10px; font-size:0.8em; color:var(--primary);">↓</div>
-            <input type="text" value="ETH (Base)" disabled style="opacity:0.5;">
-            <button class="btn-exec">Initialize Swap</button>
+        <div class="nav-link" onclick="show('swap')">
+            <i class="fas fa-exchange-alt"></i>
+            <span>SWAP</span>
         </div>
-
-        <div id="view-security" class="hidden">
-            <div class="menu-row" onclick="alert('Alpha Bravo Charlie Delta...')">
-                <span class="menu-label">Recovery Phrase</span>
-                <span class="menu-val">Reveal</span>
-            </div>
-            <div class="menu-row">
-                <span class="menu-label">Biometric ID</span>
-                <span class="menu-val">Active</span>
-            </div>
-            <div class="menu-row" style="color:#ef4444;">
-                <span class="menu-label">Reset Private Key</span>
-                <span class="menu-val">!</span>
-            </div>
+        <div class="nav-link" onclick="show('security')">
+            <i class="fas fa-shield-alt"></i>
+            <span>SECURITY</span>
         </div>
-
-        <div id="view-config" class="hidden">
-            <div class="menu-row">
-                <span class="menu-label">Active Chain</span>
-                <span class="menu-val">Arc Testnet</span>
-            </div>
-            <div class="menu-row">
-                <span class="menu-label">RPC Endpoint</span>
-                <span class="menu-val">Synced</span>
-            </div>
-            <div class="menu-row">
-                <span class="menu-label">Gas Strategy</span>
-                <span class="menu-val">Aggressive</span>
-            </div>
+        <div class="nav-link" onclick="show('settings')">
+            <i class="fas fa-cog"></i>
+            <span>CONFIG</span>
         </div>
     </div>
 </div>
@@ -128,7 +118,7 @@
         provider = new ethers.BrowserProvider(window.ethereum);
         const accounts = await provider.send("eth_requestAccounts", []);
         account = accounts[0];
-        document.getElementById('connBtn').innerText = account.slice(0,6) + "..." + account.slice(-4);
+        document.getElementById('walletAddr').innerText = account.slice(0,6) + "..." + account.slice(-4);
         sync();
     }
 
@@ -136,24 +126,25 @@
         try {
             const contract = new ethers.Contract(USDC_ADDR, ABI, provider);
             const b = await contract.balanceOf(account);
-            document.getElementById('dispBal').innerText = ethers.formatUnits(b, 6);
-        } catch (e) { document.getElementById('dispBal').innerText = "1.00"; }
+            document.getElementById('liveBal').innerText = ethers.formatUnits(b, 6);
+        } catch (e) { document.getElementById('liveBal').innerText = "1.00"; }
     }
 
-    function tab(name) {
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        document.getElementById('btn-' + name).classList.add('active');
+    function show(page) {
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        event.currentTarget.classList.add('active');
         
-        document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
-        document.getElementById('view-' + name).classList.remove('hidden');
-
-        const labels = {send: 'NATIVE SETTLEMENT', swap: 'LIQUIDITY SWAP', security: 'SECURITY VAULT', config: 'NODE CONFIGURATION'};
-        document.getElementById('panelTitle').innerText = labels[name];
+        // Toggle Content
+        if(page === 'security') {
+            document.getElementById('content-send').classList.add('hidden');
+            document.getElementById('content-security').classList.remove('hidden');
+        } else {
+            document.getElementById('content-send').classList.remove('hidden');
+            document.getElementById('content-security').classList.add('hidden');
+        }
     }
 
-    function process() {
-        alert("Coordinating with Arc Node...");
-    }
+    function tx() { alert("Coordinating with Arc Node..."); }
 
     if(window.ethereum && window.ethereum.selectedAddress) connect();
 </script>
