@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arc Pro Wallet | Production Node</title>
+    <title>Arc Pro Wallet | Universal Node</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <style>
         :root { --primary: #3b82f6; --bg: #05070a; --card: rgba(22, 30, 45, 0.7); --text: #f1f5f9; --accent: #10b981; --warning: #f59e0b; }
@@ -19,8 +19,10 @@
         .tab-btn.active { background: var(--primary); color: white; font-weight: bold; }
         input, select { width: 100%; padding: 16px; margin: 8px 0; border-radius: 12px; border: 1px solid #1f2937; background: #000; color: white; box-sizing: border-box; font-size: 0.9em; outline: none; }
         .btn-main { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 16px; width: 100%; font-weight: 700; cursor: pointer; font-size: 1em; transition: 0.3s; }
-        .ledger-box { max-height: 180px; overflow-y: auto; font-size: 0.8em; }
+        .ledger-box { max-height: 200px; overflow-y: auto; font-size: 0.8em; }
         .history-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .eco-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .eco-item { background: #111827; border: 1px solid #1f2937; padding: 12px; border-radius: 12px; text-align: center; text-decoration: none; color: #94a3b8; font-size: 0.7em; }
     </style>
 </head>
 <body>
@@ -30,10 +32,10 @@
         <button class="btn-main" id="connectBtn" onclick="init()" style="width:auto; padding: 8px 16px; font-size:0.8em;">Connect</button>
     </div>
     <div class="card" style="text-align: center;">
-        <div id="netStatus" style="font-size:0.7em; color:var(--warning); margin-bottom:8px;">● DISCONNECTED</div>
-        <div class="balance-label">USDC ASSETS</div>
+        <div id="netStatus" style="font-size:0.7em; color:var(--warning); margin-bottom:8px;">● Check Network</div>
+        <div class="balance-label">Total Portfolio (USDC)</div>
         <div class="balance-value" id="bal">0.00</div>
-        <div id="addr" style="font-family:monospace; font-size:0.7em; opacity:0.6;">0x00...0000</div>
+        <div id="addr" style="font-family:monospace; font-size:0.7em; opacity:0.6;">Wallet Not Linked</div>
     </div>
     <div class="tab-bar">
         <button class="tab-btn active" onclick="setTab('send')">Send</button>
@@ -51,47 +53,44 @@
     </div>
     <div class="card">
         <div style="font-size:0.7em; opacity:0.5; margin-bottom:10px;">LEDGER RECORDS</div>
-        <div id="ledger" class="ledger-box"></div>
+        <div id="ledger" class="ledger-box">
+            <div style="text-align:center; padding:20px; opacity:0.3;">Waiting for coordination...</div>
+        </div>
+    </div>
+    <div class="eco-grid">
+        <a href="https://community.arc.network" target="_blank" class="eco-item">Docs</a>
+        <a href="#" class="eco-item">Circle</a>
+        <a href="https://community.arc.network/home/resources" target="_blank" class="eco-item">House</a>
     </div>
 </div>
 <script>
     let provider, signer, address, currentTab = 'send';
     const ARC_CHAIN_ID = "0x2bc7"; 
     const USDC_ADDR = "0x2e1e07505F0376D41865A7E1C8A49c95d97F259B"; 
-    const ABI = ["function transfer(address to, uint256 amount) returns (bool)", "function balanceOf(address account) view returns (uint256)"];
-
+    const ABI = ["function transfer(address to, uint256 amount) returns (bool)", "function balanceOf(address) view returns (uint256)"];
     async function init() {
-        if (!window.ethereum) return alert("Please use a Web3 Browser");
+        if (!window.ethereum) return alert("Install MetaMask");
         provider = new ethers.BrowserProvider(window.ethereum);
         try {
             const accounts = await provider.send("eth_requestAccounts", []);
             address = accounts[0];
             signer = await provider.getSigner();
-            
             document.getElementById('connectBtn').innerText = "Linked";
-            document.getElementById('netStatus').innerText = "● NODE ACTIVE";
+            document.getElementById('netStatus').innerText = "● Arc Node Active";
             document.getElementById('netStatus').style.color = "#10b981";
-            document.getElementById('addr').innerText = address;
-            
-            // Force multiple syncs for real-time update
+            document.getElementById('addr').innerText = address.slice(0,6) + "..." + address.slice(-4);
             syncBalance();
-            setTimeout(syncBalance, 2000);
             renderLogs();
-        } catch (e) { console.error("Link failed", e); }
+        } catch (e) { console.error(e); }
     }
-
     async function syncBalance() {
-        if (!address || !signer) return;
+        if (!address) return;
         try {
             const contract = new ethers.Contract(USDC_ADDR, ABI, provider);
-            const rawBal = await contract.balanceOf(address);
-            document.getElementById('bal').innerText = ethers.formatUnits(rawBal, 6);
-        } catch (e) { 
-            console.error("Balance Sync Error", e);
-            document.getElementById('bal').innerText = "Fetch Error";
-        }
+            const b = await contract.balanceOf(address);
+            document.getElementById('bal').innerText = ethers.formatUnits(b, 6);
+        } catch (e) { document.getElementById('bal').innerText = "0.00"; }
     }
-
     function setTab(tab) {
         currentTab = tab;
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -100,47 +99,43 @@
         document.getElementById('panelTitle').innerText = titles[tab];
         const fields = document.getElementById('dynamicFields');
         if (tab === 'swap') {
-            fields.innerHTML = '<select id="tokenIn"><option>USDC</option></select><input type="number" id="amt" placeholder="Swap Amount">';
+            fields.innerHTML = '<select id="tokenIn"><option>USDC</option></select><input type="number" id="amt" placeholder="Amount to Swap">';
         } else if (tab === 'pool') {
-            fields.innerHTML = '<select id="poolType"><option>USDC Yield</option></select><input type="number" id="amt" placeholder="Stake Amount">';
+            fields.innerHTML = '<select id="poolType"><option>USDC/ETH Pool</option><option>Stable Yield</option></select><input type="number" id="amt" placeholder="Amount to Stake">';
         } else {
-            fields.innerHTML = '<input type="text" id="target" placeholder="Recipient / Gateway"><input type="number" id="amt" placeholder="Amount">';
+            fields.innerHTML = '<input type="text" id="target" placeholder="Recipient / Bridge Address"><input type="number" id="amt" placeholder="Amount">';
         }
     }
-
     async function handleAction() {
-        if (!signer) return alert("Wallet not linked");
+        if (!signer) return alert("Connect Wallet First");
         const btn = document.getElementById('mainAction');
         const val = document.getElementById('amt').value;
         const target = document.getElementById('target')?.value || USDC_ADDR;
-        
         try {
-            btn.disabled = true; btn.innerText = "Processing...";
+            btn.disabled = true; btn.innerText = "Coordinating...";
             const contract = new ethers.Contract(USDC_ADDR, ABI, signer);
             const tx = await contract.transfer(target, ethers.parseUnits(val, 6));
-            
             addLog(currentTab, val, tx.hash);
             await tx.wait();
-            alert("Transaction Confirmed");
+            alert(`${currentTab.toUpperCase()} Finalized!`);
             syncBalance();
-        } catch (e) { alert("Transaction Failed"); console.error(e); }
+        } catch (e) { alert("Transaction Failed"); }
         finally { btn.disabled = false; btn.innerText = "Initialize Settlement"; }
     }
-
     function addLog(type, amt, hash) {
         let logs = JSON.parse(localStorage.getItem('arc_logs') || '[]');
-        logs.unshift({ type: type.toUpperCase(), val: amt, id: hash.slice(0,8), time: new Date().toLocaleTimeString() });
-        localStorage.setItem('arc_logs', JSON.stringify(logs.slice(0, 4)));
+        logs.unshift({ type: type.toUpperCase(), val: amt, id: hash.slice(0,10), time: new Date().toLocaleTimeString() });
+        localStorage.setItem('arc_logs', JSON.stringify(logs.slice(0, 5)));
         renderLogs();
     }
-
     function renderLogs() {
         const box = document.getElementById('ledger');
         const logs = JSON.parse(localStorage.getItem('arc_logs') || '[]');
+        if (logs.length === 0) return;
         box.innerHTML = logs.map(l => `
             <div class="history-item">
-                <div><b>${l.type}</b><br><small>${l.id}...</small></div>
-                <div style="text-align:right"><span>${l.val} USDC</span></div>
+                <div><b>${l.type}</b><br><small style="opacity:0.5">${l.id}...</small></div>
+                <div style="text-align:right"><span style="color:var(--primary)">${l.val} USDC</span><br><small style="opacity:0.5">${l.time}</small></div>
             </div>
         `).join('');
     }
