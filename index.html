@@ -7,68 +7,50 @@
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
-    body { font-family: 'Inter', sans-serif; background: #0a0a0f; color: #e0e0ff; margin:0; padding:0; }
-    .container { max-width: 480px; margin: 0 auto; background: #111118; min-height: 100vh; }
-    header { padding: 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #22222f; }
-    .logo { font-weight: 600; font-size: 20px; }
-    .tabs { display: flex; background: #1a1a24; }
-    .tab { flex: 1; padding: 14px; text-align: center; font-weight: 500; cursor: pointer; }
-    .tab.active { background: #22222f; border-bottom: 3px solid #3b82f6; }
-    .card { background: #1a1a24; margin: 16px; border-radius: 16px; padding: 16px; }
-    button { background: #3b82f6; color: white; border: none; padding: 14px; border-radius: 12px; width: 100%; font-weight: 600; margin-top: 12px; cursor: pointer; }
-    button:disabled { background: #334155; }
-    input, select { width: 100%; background: #22222f; border: none; padding: 14px; border-radius: 12px; color: white; margin: 8px 0; }
-    .quick { display: flex; gap: 8px; margin: 12px 0; }
-    .quick button { background: #22222f; flex: 1; padding: 10px; font-size: 14px; }
-    .network { font-size: 13px; color: #22c55e; }
-    .balance { font-size: 28px; font-weight: 600; margin: 8px 0; }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Inter', sans-serif; background:#0a0a0f; color:#e0e0ff; }
+    .container { max-width:480px; margin:0 auto; background:#111118; min-height:100vh; }
+    header { padding:16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #22222f; }
+    .logo { font-size:22px; font-weight:600; }
+    .card { background:#1a1a24; margin:16px; border-radius:16px; padding:20px; }
+    button { background:#3b82f6; color:white; border:none; padding:14px; border-radius:12px; width:100%; font-weight:600; cursor:pointer; font-size:16px; }
+    button:disabled { background:#334155; cursor:not-allowed; }
+    input, select { width:100%; background:#22222f; border:none; padding:14px; border-radius:12px; color:white; margin:8px 0; font-size:16px; }
+    .quick { display:flex; gap:8px; margin:12px 0; }
+    .quick button { background:#22222f; flex:1; padding:12px; border-radius:12px; font-size:15px; }
+    .status { color:#22c55e; font-weight:500; }
+    .balance { font-size:28px; font-weight:600; margin:8px 0; }
   </style>
 </head>
 <body>
   <div class="container">
 
-    <!-- Header -->
     <header>
       <div class="logo">ArcFlow Pro</div>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <button onclick="connectWallet()" id="connectBtn" style="background:#22222f; padding:8px 16px; font-size:14px;">Connect</button>
-        <div style="background:#1a1a24; padding:6px 10px; border-radius:50%;">A</div>
-      </div>
+      <button onclick="connectWallet()" id="connectBtn">Connect</button>
     </header>
 
-    <!-- Network Status -->
-    <div class="card" style="margin-top:8px;">
-      <div style="display:flex; justify-content:space-between;">
-        <span>ARC TESTNET</span>
-        <span class="network" id="status">Idle</span>
-      </div>
-      <div id="balances" style="margin-top:12px; font-size:14px;">
-        <div>0.00 USDC</div>
-      </div>
-    </div>
-
-    <!-- Main Tabs -->
-    <div class="tabs">
-      <div class="tab active" onclick="switchTab(0)">Transfer</div>
-      <div class="tab" onclick="switchTab(1)">Swap</div>
-      <div class="tab" onclick="switchTab(2)">Pools</div>
-      <div class="tab" onclick="switchTab(3)">Bridge</div>
-    </div>
-
-    <!-- SEND ASSET CARD -->
     <div class="card">
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-        <span style="color:#60a5fa;">↗</span>
-        <strong>SEND ASSET</strong>
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <strong>ARC TESTNET</strong><br>
+          <span id="balanceDisplay" class="balance">0.00 USDC</span>
+        </div>
+        <span id="status" style="color:#eab308;">Idle</span>
       </div>
+    </div>
 
-      <select id="assetSelect">
+    <!-- SEND ASSET -->
+    <div class="card">
+      <strong style="display:flex;align-items:center;gap:8px;">↗ SEND ASSET</strong>
+      
+      <select id="asset">
         <option>USDC (Stablecoin)</option>
       </select>
 
       <input type="text" id="recipient" placeholder="Recipient address (0x...)" />
 
-      <div style="margin:12px 0 8px;">Quick Amount:</div>
+      <div>Quick Amount:</div>
       <div class="quick">
         <button onclick="setAmount(10)">10</button>
         <button onclick="setAmount(50)">50</button>
@@ -77,40 +59,31 @@
 
       <input type="number" id="amount" value="0.00" step="0.01" />
 
-      <button onclick="sendTransaction()">Confirm Send</button>
+      <button onclick="sendUSDC()">Confirm Send</button>
     </div>
 
     <!-- Ecosystem -->
     <div class="card">
       <strong>ECOSYSTEM & SOCIALS</strong>
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:16px;">
-
-        <div style="text-align:center; background:#22222f; padding:12px; border-radius:12px; cursor:pointer;" onclick="window.open('https://arc.network')">
-          Website
-        </div>
-        <div style="text-align:center; background:#22222f; padding:12px; border-radius:12px; cursor:pointer;" onclick="window.open('https://docs.arc.network')">
-          Docs
-        </div>
-        <div style="text-align:center; background:#22222f; padding:12px; border-radius:12px; cursor:pointer;">
-          House
-        </div>
-
-        <div onclick="window.open('https://x.com/arcnetwork')"><strong>X</strong></div>
-        <div onclick="window.open('https://discord.gg/arcnetwork')"><strong>Discord</strong></div>
-        <!-- Add more as per screenshot -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;">
+        <div onclick="window.open('https://arc.network')" style="background:#22222f;padding:12px;border-radius:12px;text-align:center;cursor:pointer;">Website</div>
+        <div onclick="window.open('https://docs.arc.network')" style="background:#22222f;padding:12px;border-radius:12px;text-align:center;cursor:pointer;">Docs</div>
+        <div style="background:#22222f;padding:12px;border-radius:12px;text-align:center;cursor:pointer;">House</div>
+        <div onclick="window.open('https://x.com/arcnetwork')" style="background:#22222f;padding:12px;border-radius:12px;text-align:center;cursor:pointer;">X</div>
+        <div onclick="window.open('https://discord.gg/arcnetwork')" style="background:#22222f;padding:12px;border-radius:12px;text-align:center;cursor:pointer;">Discord</div>
       </div>
     </div>
 
-    <div style="text-align:center; padding:20px; font-size:13px; color:#666;">
+    <div style="text-align:center;padding:20px;color:#666;font-size:13px;">
       Built for Arc Network • Testnet
     </div>
   </div>
 
   <script>
-    let provider, signer, address;
+    let provider, signer, userAddress;
 
-    const ARC_CHAIN = {
-      chainId: "0x4DC", // 5042002 in hex
+    const ARC_TESTNET = {
+      chainId: "0x4cef52",          // 5042002
       chainName: "Arc Testnet",
       nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 6 },
       rpcUrls: ["https://rpc.testnet.arc.network"],
@@ -118,67 +91,78 @@
     };
 
     async function connectWallet() {
-      if (typeof window.ethereum === "undefined") {
-        alert("MetaMask install karo");
+      if (!window.ethereum) {
+        alert("MetaMask install karo bhai");
         return;
       }
+
       try {
-        await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [ARC_CHAIN] });
+        // Add / Switch network
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [ARC_TESTNET]
+        });
+
         await window.ethereum.request({ method: 'eth_requestAccounts' });
+
         provider = new ethers.providers.Web3Provider(window.ethereum);
         signer = provider.getSigner();
-        address = await signer.getAddress();
+        userAddress = await signer.getAddress();
 
-        document.getElementById("connectBtn").innerText = address.slice(0,6) + "..." + address.slice(-4);
+        document.getElementById("connectBtn").innerText = userAddress.slice(0,6) + "..." + userAddress.slice(-4);
         document.getElementById("status").innerText = "Connected";
+        document.getElementById("status").style.color = "#22c55e";
+
         getBalance();
-      } catch (e) {
-        console.error(e);
+      } catch (error) {
+        console.error(error);
+        alert("Connect failed: " + error.message);
       }
     }
 
     async function getBalance() {
-      if (!signer) return;
+      if (!provider || !userAddress) return;
       try {
-        const bal = await provider.getBalance(address);
-        document.getElementById("balances").innerHTML = `<div>${(parseFloat(bal)/1e6).toFixed(2)} USDC</div>`;
-      } catch(e){}
+        const bal = await provider.getBalance(userAddress);
+        const usdcBal = (parseFloat(bal) / 1e6).toFixed(2);
+        document.getElementById("balanceDisplay").innerText = usdcBal + " USDC";
+      } catch(e) {}
     }
 
     function setAmount(val) {
       document.getElementById("amount").value = val;
     }
 
-    async function sendTransaction() {
+    async function sendUSDC() {
       if (!signer) {
         alert("Pehle Connect Wallet karo");
         return;
       }
-      const to = document.getElementById("recipient").value;
+      const to = document.getElementById("recipient").value.trim();
       const amount = document.getElementById("amount").value;
 
-      if (!to || !amount) {
-        alert("Recipient aur amount daalo");
+      if (!to || !ethers.utils.isAddress(to)) {
+        alert("Sahih recipient address daalo");
+        return;
+      }
+      if (!amount || parseFloat(amount) <= 0) {
+        alert("Amount daalo");
         return;
       }
 
       try {
         const tx = await signer.sendTransaction({
           to: to,
-          value: ethers.utils.parseUnits(amount, 6)   // USDC 6 decimals
+          value: ethers.utils.parseUnits(amount, 6)
         });
-        alert("Transaction sent! Hash: " + tx.hash);
-        console.log("Tx:", tx);
+        alert(`Transaction bheji gayi!\nHash: ${tx.hash}`);
       } catch (e) {
         alert("Error: " + e.message);
       }
     }
 
-    function switchTab(n) {
-      alert("Coming soon - " + ["Transfer","Swap","Pools","Bridge"][n]);
-    }
-
-    // Auto detect network change
+    // Listen for account change
+    window.ethereum?.on('accountsChanged', () => window.location.reload());
     window.ethereum?.on('chainChanged', () => window.location.reload());
   </script>
 </body>
