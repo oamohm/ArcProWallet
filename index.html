@@ -3,111 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arc Pro Wallet | Settlement Node</title>
+    <title>Arc pro wallet</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <style>
-        :root { --primary: #3b82f6; --bg: #05070a; --card: rgba(22, 30, 45, 0.8); --text: #f1f5f9; --accent: #10b981; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
-        .app-container { width: 100%; max-width: 420px; }
+        :root { --primary: #3b82f6; --bg: #0b0f1a; --card: #161e2d; --text: #f1f5f9; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; padding: 15px; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        .app-container { width: 100%; max-width: 450px; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; }
-        .logo { font-weight: 800; font-size: 1.5em; letter-spacing: -1px; }
-        .card { background: var(--card); border-radius: 28px; padding: 25px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 15px; backdrop-filter: blur(15px); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .balance-label { color: #64748b; font-size: 0.8em; font-weight: 600; text-align: center; }
-        .balance-value { font-size: 3.2em; font-weight: 800; text-align: center; margin: 5px 0; color: #fff; }
-        .tab-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
-        .tab-btn { background: #1e293b; color: #94a3b8; border: none; padding: 12px 5px; border-radius: 14px; font-size: 0.7em; cursor: pointer; font-weight: 600; }
-        .tab-btn.active { background: var(--primary); color: white; }
-        input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 15px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 18px; width: 100%; font-weight: 700; cursor: pointer; margin-top: 10px; }
-        .status-tag { font-size: 0.7em; padding: 4px 10px; border-radius: 20px; display: inline-block; margin-bottom: 10px; }
+        .card { background: var(--card); border-radius: 20px; padding: 20px; border: 1px solid #2d3748; margin-bottom: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .balance-title { color: #94a3b8; font-size: 0.9em; text-align: center; }
+        .balance-value { font-size: 3em; font-weight: 800; text-align: center; margin: 10px 0; color: #fff; }
+        .btn { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 14px; width: 100%; font-weight: 700; cursor: pointer; font-size: 1em; transition: 0.3s; }
+        .btn:hover { background: #2563eb; }
+        input { width: 100%; padding: 14px; margin: 10px 0; border-radius: 12px; border: 1px solid #2d3748; background: #0b0f1a; color: white; box-sizing: border-box; outline: none; }
+        .status { font-size: 0.75em; text-align: center; color: #10b981; margin-top: 10px; }
+        .activity-table { width: 100%; margin-top: 15px; font-size: 0.85em; }
+        .activity-table td { padding: 12px 0; border-bottom: 1px solid #2d3748; }
+        .badge { background: #1e293b; padding: 4px 10px; border-radius: 8px; font-size: 0.8em; color: var(--primary); }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header">
-        <div class="logo">ARC<span style="color:var(--primary)">PRO</span></div>
-        <button id="connBtn" onclick="connect()" style="background:#1e293b; color:white; border:none; padding:8px 15px; border-radius:10px; cursor:pointer;">Connect Wallet</button>
-    </div>
-
-    <div class="card" style="text-align:center">
-        <div id="netBox" class="status-tag" style="background:rgba(245,158,11,0.1); color:#f59e0b">● Network Offline</div>
-        <div class="balance-label">USDC ASSET BALANCE</div>
-        <div class="balance-value" id="balanceDisplay">0.00</div>
-        <div id="walletAddr" style="font-size:0.7em; opacity:0.5; font-family:monospace">Not Connected</div>
-    </div>
-
-    <div class="tab-bar">
-        <button class="tab-btn active" onclick="switchTab('send')">SEND</button>
-        <button class="tab-btn" onclick="switchTab('swap')">SWAP</button>
-        <button class="tab-btn" onclick="switchTab('pool')">POOLS</button>
-        <button class="tab-btn" onclick="switchTab('bridge')">BRIDGE</button>
+        <h2 style="margin:0; font-style: italic;">Arc pro <span style="color:var(--primary)">wallet</span></h2>
+        <button class="btn" id="connectBtn" onclick="connectWallet()" style="width:auto; padding: 8px 16px; font-size: 0.8em;">Connect</button>
     </div>
 
     <div class="card">
-        <h4 id="actionTitle" style="margin:0 0 15px 0; font-size:0.9em">NATIVE TRANSFER</h4>
-        <div id="formFields">
-            <input type="text" id="toAddr" placeholder="Destination Address">
-            <input type="number" id="sendAmt" placeholder="0.00">
-        </div>
-        <button class="btn-main" id="execBtn" onclick="executeAction()">Process Transaction</button>
+        <div class="balance-title">Arc Testnet Assets</div>
+        <div class="balance-value" id="myBalance">0.00</div>
+        <div style="text-align:center;"><span class="badge">NATIVE USDC</span></div>
+        <div class="status" id="walletAddr">Wallet Disconnected</div>
+    </div>
+
+    <div class="card">
+        <h4 style="margin:0 0 10px 0;">Transfer & Route</h4>
+        <input type="text" id="toAddr" placeholder="Recipient Address (0x...)">
+        <input type="number" id="sendAmt" placeholder="Amount (USDC)">
+        <button class="btn" onclick="sendUSDC()">Process Transfer</button>
+    </div>
+
+    <div class="card">
+        <h4 style="margin:0 0 10px 0;">Activity Ledger</h4>
+        <table class="activity-table">
+            <tbody id="ledgerBody">
+                <tr><td style="color:#94a3b8; text-align:center;">Waiting for transactions...</td></tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
 <script>
-    let provider, signer, account;
-    const USDC_CONTRACT = "0x2e1e07505F0376D41865A7E1C8A49c95d97F259B";
-    const ABI = ["function balanceOf(address) view returns (uint256)", "function transfer(address, uint256) returns (bool)"];
+let provider, signer, myAddress;
 
-    async function connect() {
-        if (!window.ethereum) return alert("MetaMask required");
+const RPC_URL = "https://arc-testnet.drpc.org"; 
+const CHAIN_ID = "0x4cef52"; 
+const USDC_ADDRESS = "0x3600000000000000000000000000000000000000"; 
+const USDC_ABI = [
+    "function balanceOf(address) view returns (uint256)",
+    "function decimals() view returns (uint8)",
+    "function transfer(address, uint256) returns (bool)"
+];
+
+async function connectWallet() {
+    if (window.ethereum) {
         try {
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: CHAIN_ID }],
+                });
+            } catch (switchError) {
+                if (switchError.code === 4902) {
+                    await window.ethereum.request({
+                        method: 'wallet_addEthereumChain',
+                        params: [{
+                            chainId: CHAIN_ID,
+                            chainName: 'Arc Testnet',
+                            rpcUrls: [RPC_URL],
+                            nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
+                            blockExplorerUrls: null
+                        }],
+                    });
+                }
+            }
+
             provider = new ethers.BrowserProvider(window.ethereum);
             const accounts = await provider.send("eth_requestAccounts", []);
-            account = accounts[0];
             signer = await provider.getSigner();
+            myAddress = accounts[0];
             
-            document.getElementById('connBtn').innerText = "Linked";
-            document.getElementById('walletAddr').innerText = account;
-            document.getElementById('netBox').style.background = "rgba(16,185,129,0.1)";
-            document.getElementById('netBox').style.color = "#10b981";
-            document.getElementById('netBox').innerText = "● Arc Testnet Live";
+            document.getElementById('walletAddr').innerText = "Linked: " + myAddress.slice(0,6) + "..." + myAddress.slice(-4);
+            document.getElementById('connectBtn').innerText = "Connected";
             
-            fetchBalance();
-        } catch (err) { console.error(err); }
-    }
+            await updateBalance();
+        } catch (e) { alert("Please approve connection in MetaMask"); }
+    } else { alert("Open in MetaMask Browser App"); }
+}
 
-    async function fetchBalance() {
-        try {
-            const contract = new ethers.Contract(USDC_CONTRACT, ABI, provider);
-            const bal = await contract.balanceOf(account);
-            document.getElementById('balanceDisplay').innerText = ethers.formatUnits(bal, 6);
-        } catch (e) { 
-            console.log("Balance fetch error, retrying..."); 
-            document.getElementById('balanceDisplay').innerText = "1.00"; // Fallback visual
-        }
-    }
+async function updateBalance() {
+    if (!myAddress) return;
+    try {
+        const contract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, provider);
+        const [bal, dec] = await Promise.all([
+            contract.balanceOf(myAddress),
+            contract.decimals()
+        ]);
+        const formatted = ethers.formatUnits(bal, dec);
+        document.getElementById('myBalance').innerText = parseFloat(formatted).toFixed(2);
+    } catch (e) { console.error("Balance Error", e); }
+}
 
-    function switchTab(type) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        event.target.classList.add('active');
-        const title = { send: 'NATIVE TRANSFER', swap: 'LIQUIDITY SWAP', pool: 'YIELD POOLS', bridge: 'CROSS-CHAIN BRIDGE' };
-        document.getElementById('actionTitle').innerText = title[type];
-    }
+async function sendUSDC() {
+    const to = document.getElementById('toAddr').value;
+    const amt = document.getElementById('sendAmt').value;
+    if (!signer || !to || !amt) return alert("Fill details first");
 
-    async function executeAction() {
-        if(!signer) return alert("Connect first");
-        const btn = document.getElementById('execBtn');
-        btn.innerText = "Verifying...";
-        setTimeout(() => {
-            alert("Transaction Submitted to Arc Node");
-            btn.innerText = "Process Transaction";
-        }, 2000);
-    }
+    try {
+        const contract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);
+        const dec = await contract.decimals();
+        const tx = await contract.transfer(to, ethers.parseUnits(amt.toString(), dec));
+        
+        addLedger("Sent", amt);
+        alert("Transaction Sent! Hash: " + tx.hash);
+        await tx.wait();
+        updateBalance();
+    } catch (e) { alert("Error: " + e.message); }
+}
 
-    // Auto-init if already connected
-    if(window.ethereum && window.ethereum.selectedAddress) connect();
+function addLedger(type, amt) {
+    const ledger = document.getElementById('ledgerBody');
+    if(ledger.innerText.includes("Waiting")) ledger.innerHTML = "";
+    const row = `<tr><td>${new Date().toLocaleTimeString()}</td><td><b>${type}</b></td><td style="text-align:right">${amt} USDC</td></tr>`;
+    ledger.insertAdjacentHTML('afterbegin', row);
+}
 </script>
-
 </body>
 </html>
