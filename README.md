@@ -1,161 +1,62 @@
 # ArcPro Wallet
 
-Universal multi-asset settlement interface built for Arc Network infrastructure.
+Simple Web3 wallet interface built for Arc ecosystem experimentation.
 
-Focused on deterministic USDC transfers, wallet coordination, and lightweight crosschain-ready transaction routing.
-
----
-
-## Overview
-
-ArcPro Wallet is a browser-based Web3 wallet interface designed for:
-
-- USDC settlement
-- wallet connectivity
-- transaction confirmation flow
-- responsive mobile execution
-- lightweight infrastructure interaction
-- Arc ecosystem experimentation
-
-The application uses Ethers.js with a clean single-file architecture optimized for rapid deployment and public infrastructure testing.
+Supports:
+- MetaMask connection
+- live wallet balance
+- network detection
+- transaction confirmation
+- responsive mobile UI
 
 ---
 
 # Features
 
-### Wallet Connectivity
-- MetaMask integration
-- EVM wallet support
-- account auto-detection
-- chain refresh listeners
-
-### Asset Visibility
-- live USDC balance fetch
-- wallet address rendering
-- network detection
-- dynamic balance updates
-
-### Transaction Flow
-- recipient validation
-- confirmation modal
-- onchain transfer execution
-- pending transaction states
-- transaction success/failure feedback
-
-### Infrastructure Design
-- mobile-first interface
-- lightweight architecture
-- no backend dependency
-- Vercel-ready deployment
-- GitHub-native workflow
-
----
-
-# Technical Stack
-
-| Layer | Stack |
-|---|---|
-| Frontend | HTML5 / CSS3 |
-| Blockchain SDK | Ethers.js v6 |
-| Wallet Provider | MetaMask |
-| Network | EVM Compatible |
-| Deployment | Vercel |
-| Repository | GitHub |
-
----
-
-# Current Modules
-
 - Wallet Connect
-- USDC Transfer
-- Balance Tracking
-- Confirmation System
+- Real Wallet Balance
 - Network Detection
-- Responsive UI
+- Send Transaction Flow
+- Confirmation Button
+- Mobile Responsive Design
+- GitHub + Vercel Ready
 
 ---
 
-# Planned Expansion
+# Stack
 
-- swap routing
-- bridge execution
-- Arc settlement coordination
-- liquidity vaults
-- transaction history
-- QR wallet scanner
-- multi-chain abstraction
-- programmable payment flows
-- middleware indexing
+- HTML
+- CSS
+- JavaScript
+- Ethers.js
+- MetaMask
 
 ---
 
-# Local Development
+# Deployment
 
-Clone repository:
-
-```bash
-git clone https://github.com/yourusername/ArcProWallet.git
-
-Open project:
-
-cd ArcProWallet
-
-Run locally:
-
-open index.html
+1. Upload files to GitHub
+2. Connect repository to Vercel
+3. Deploy automatically
 
 ---
 
-Deployment
+# Security
 
-The application is optimized for:
+This app never stores:
+- private keys
+- seed phrases
+- wallet passwords
 
-- Vercel
-- GitHub Pages
-- Netlify
-
-Push repository updates and deploy directly through connected infrastructure pipelines.
-
----
-
-Security Notes
-
-This project does NOT:
-
-- store seed phrases
-- store private keys
-- use custodial infrastructure
-
-Users retain full wallet ownership through browser wallet providers.
+Users keep full wallet ownership through MetaMask.
 
 ---
 
-Architecture Philosophy
+# Status
 
-Infrastructure usability increasingly matters more than speculative complexity.
+Experimental infrastructure wallet build.
 
-ArcPro Wallet focuses on:
-
-- execution clarity
-- deterministic interaction
-- lightweight coordination
-- reproducible infrastructure experimentation
-
----
-
-Status
-
-Active experimental infrastructure build.
-
-Optimizing for:
-
-- wallet UX
+Focused on:
+- usability
 - settlement simplicity
-- infrastructure abstraction
-- ecosystem interoperability
-
----
-
-License
-
-MIT License
+- lightweight execution
