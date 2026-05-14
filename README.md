@@ -16,7 +16,7 @@ Arc Pro Wallet is a high-performance, non-custodial interface designed for the a
 - **Network:** Arc L1 (by Circle)
 
 ## 📦 Deployment
-Deploy the `index.html` via Vercel or any static host. Ensure the `USDC_ADDR` is mapped to the current Arc Scan contract address for live interaction.
+Deploy the `index.html` via Vercel or any static host. The `USDC_ADDR` is pre-configured for Arc Testnet interaction.
 
 ## 🤝 Community
 Building the realization of a decentralized financial infrastructure.
