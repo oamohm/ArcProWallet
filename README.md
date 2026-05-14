@@ -4,7 +4,7 @@ Professional-grade asset routing interface for the Arc Network ecosystem.
 
 ## 🚀 Deployment Status
 - **Interface:** Refined Glassmorphism UI
-- **Network:** Arc Flow Testnet Synchronization
+- **Network:** Arc pro Testnet Synchronization
 - **Security:** AES-256 Node Key Encryption
 
 ## 🛠 Features
