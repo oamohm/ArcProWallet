@@ -147,21 +147,28 @@
       const amt = document.getElementById("amount").value;
 
       if (!ethers.utils.isAddress(to)) { alert("Sahih recipient address daalo"); return; }
-      if (parseFloat(amt) <= 0) { alert("Valid amount daalo"); return; }
+      if (parseFloat(amt) <= 0) { alert("Amount daalo"); return; }
 
       try {
+        // Gas estimate + explicit params
+        const gasEstimate = await provider.estimateGas({
+          from: userAddress,
+          to: to,
+          value: ethers.utils.parseUnits(amt, 18)
+        });
+
         const tx = await signer.sendTransaction({
           to: to,
           value: ethers.utils.parseUnits(amt, 18),
-          gasLimit: 21000   // Explicit gas for native transfer
+          gasLimit: gasEstimate.mul(12).div(10)  // 20% extra buffer
         });
 
         addTxToHistory(tx.hash, amt, to);
-        alert(`✅ Transaction Successful!\n\nHash: ${tx.hash}\n\nExplorer: https://testnet.arcscan.app/tx/${tx.hash}`);
-        setTimeout(getBalance, 3000);
+        alert(`✅ Success!\nHash: ${tx.hash}\n\nExplorer: https://testnet.arcscan.app/tx/${tx.hash}`);
+        setTimeout(getBalance, 4000);
       } catch (e) {
         console.error(e);
-        alert("Send failed: " + (e.message || "Insufficient gas or network issue. Faucet se aur USDC le lo."));
+        alert("Send failed: " + (e.message || "Insufficient balance ya gas issue. Faucet se aur le lo."));
       }
     }
 
