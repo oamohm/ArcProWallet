@@ -3,87 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arc Pro Wallet | Universal Settlement</title>
+    <title>Arc Pro | Universal Router</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <style>
         :root { --primary: #3b82f6; --bg: #05070a; --card: rgba(22, 30, 45, 0.7); --text: #f1f5f9; --accent: #10b981; }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
         .app-container { width: 100%; max-width: 450px; }
+        
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 0 20px; }
+        .logo { font-weight: 800; font-size: 1.2em; letter-spacing: -1px; }
+        
         .card { background: var(--card); border-radius: 24px; padding: 24px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; backdrop-filter: blur(20px); }
-        .balance-value { font-size: 3em; font-weight: 800; text-align: center; margin: 10px 0; }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 16px; width: 100%; font-weight: 700; cursor: pointer; }
-        input { width: 100%; padding: 16px; margin: 8px 0; border-radius: 12px; border: 1px solid #1f2937; background: #000; color: white; box-sizing: border-box; }
-        .status { font-size: 0.8em; text-align: center; margin-bottom: 10px; }
+        .balance-value { font-size: 3.2em; font-weight: 800; text-align: center; margin: 5px 0; }
+        
+        .grid-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+        .action-btn { background: #1e293b; border: 1px solid #334155; color: #94a3b8; padding: 12px 5px; border-radius: 16px; font-size: 0.7em; cursor: pointer; transition: 0.3s; }
+        .action-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        
+        input { width: 100%; padding: 16px; margin: 8px 0; border-radius: 14px; border: 1px solid #1f2937; background: #000; color: white; box-sizing: border-box; font-size: 0.9em; outline: none; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 18px; width: 100%; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        
+        .status-bar { display: flex; justify-content: space-between; font-size: 0.7em; color: #94a3b8; margin-bottom: 10px; }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <div class="card">
-            <h2>ARC PRO</h2>
-            <div class="status" id="status">Disconnected</div>
-            <button class="btn-main" id="connectBtn" onclick="initWallet()">Connect Wallet</button>
-        </div>
 
-        <div class="card">
-            <div style="color: #94a3b8; font-size: 0.8em;">USDC BALANCE</div>
-            <div class="balance-value" id="bal">0.00</div>
-            <input type="text" id="target" placeholder="Recipient (0x...)">
-            <input type="number" id="amt" placeholder="Amount">
-            <button class="btn-main" id="actionBtn" onclick="settle()">Send USDC</button>
-        </div>
+<div class="app-container">
+    <div class="header">
+        <div class="logo">ARC<span style="color:var(--primary)">PRO</span></div>
+        <button id="connectBtn" onclick="initWallet()" style="background:var(--primary); color:white; border:none; padding:8px 16px; border-radius:12px; font-size:0.8em; font-weight:600;">Link Node</button>
     </div>
 
-    <script>
-        let provider, signer, address;
-        // Replace with actual Arc Testnet USDC Address from Arc Scan
-        const USDC_ADDR = "0x..."; 
-        const ABI = [
-            "function transfer(address to, uint256 amount) returns (bool)", 
-            "function balanceOf(address) view returns (uint256)"
-        ];
+    <div class="status-bar">
+        <div id="netStatus" style="color:#ef4444;">● Disconnected</div>
+        <div id="addrDisplay">Identity Unknown</div>
+    </div>
 
-        async function initWallet() {
-            if (!window.ethereum) return alert("Install Metamask");
-            provider = new ethers.BrowserProvider(window.ethereum);
-            const accounts = await provider.send("eth_requestAccounts", []);
-            signer = await provider.getSigner();
-            address = accounts[0];
-            document.getElementById('status').innerText = "Active: " + address.slice(0,6);
+    <div class="card">
+        <div style="color: #94a3b8; font-size: 0.7em; text-transform: uppercase; letter-spacing: 1px; text-align: center;">Settlement Balance (USDC)</div>
+        <div class="balance-value" id="bal">0.00</div>
+        <div style="text-align:center; font-size:0.7em; color:var(--accent); opacity:0.8;" id="syncLabel">Awaiting Coordination</div>
+    </div>
+
+    <div class="grid-actions">
+        <button class="action-btn active" id="btn-send" onclick="setMode('send')">Send</button>
+        <button class="action-btn" id="btn-swap" onclick="setMode('swap')">Swap</button>
+        <button class="action-btn" id="btn-pool" onclick="setMode('pool')">Pools</button>
+        <button class="action-btn" id="btn-bridge" onclick="setMode('bridge')">Bridge</button>
+    </div>
+
+    <div class="card">
+        <h4 id="modeTitle" style="margin:0 0 15px 0; font-size: 0.8em; color: var(--primary);">NATIVE SETTLEMENT</h4>
+        <div id="inputArea">
+            <input type="text" id="target" placeholder="Recipient Address (0x...)">
+            <input type="number" id="amt" placeholder="Amount (USDC)">
+        </div>
+        <button class="btn-main" id="mainAction" onclick="handleAction()">Initialize Engine</button>
+    </div>
+</div>
+
+<script>
+    let provider, signer, address, currentMode = 'send';
+    // Replace this with the actual USDC contract address from Arc Scan
+    const USDC_ADDR = "0x..."; 
+    const ABI = [
+        "function transfer(address to, uint256 amount) returns (bool)", 
+        "function balanceOf(address) view returns (uint256)"
+    ];
+
+    async function initWallet() {
+        if (!window.ethereum) return alert("Install Metamask");
+        provider = new ethers.BrowserProvider(window.ethereum);
+        const accounts = await provider.send("eth_requestAccounts", []);
+        signer = await provider.getSigner();
+        address = accounts[0];
+        
+        document.getElementById('connectBtn').innerText = "Linked";
+        document.getElementById('netStatus').innerText = "● Arc Node Active";
+        document.getElementById('netStatus').style.color = "#10b981";
+        document.getElementById('addrDisplay').innerText = address.slice(0,6) + "..." + address.slice(-4);
+        
+        updateBal();
+    }
+
+    async function updateBal() {
+        if (!address || USDC_ADDR === "0x...") return;
+        try {
+            const contract = new ethers.Contract(USDC_ADDR, ABI, provider);
+            const b = await contract.balanceOf(address);
+            document.getElementById('bal').innerText = ethers.formatUnits(b, 6);
+            document.getElementById('syncLabel').innerText = "Synced with Arc L1";
+        } catch(e) { 
+            console.error(e);
+            document.getElementById('syncLabel').innerText = "Sync Failed: Check Contract";
+        }
+    }
+
+    function setMode(mode) {
+        currentMode = mode;
+        const btns = ['send', 'swap', 'pool', 'bridge'];
+        btns.forEach(b => document.getElementById(`btn-${b}`).classList.remove('active'));
+        document.getElementById(`btn-${mode}`).classList.add('active');
+        
+        const titles = {send: 'NATIVE SETTLEMENT', swap: 'LIQUIDITY SWAP', pool: 'YIELD POOLS', bridge: 'GATEWAY BRIDGE'};
+        document.getElementById('modeTitle').innerText = titles[mode];
+        document.getElementById('mainAction').innerText = `Initialize ${mode.charAt(0).toUpperCase() + mode.slice(1)}`;
+    }
+
+    async function handleAction() {
+        if (!signer) return alert("Link Wallet First");
+        if (currentMode !== 'send') return alert(`${currentMode} module is in optimization phase`);
+
+        const to = document.getElementById('target').value;
+        const val = document.getElementById('amt').value;
+        if (!to || !val) return alert("Missing Parameters");
+
+        try {
+            const btn = document.getElementById('mainAction');
+            btn.disabled = true; btn.innerText = "Coordinating...";
+            
+            const contract = new ethers.Contract(USDC_ADDR, ABI, signer);
+            const tx = await contract.transfer(to, ethers.parseUnits(val, 6));
+            await tx.wait();
+            
+            alert("Settlement Finalized");
             updateBal();
+            btn.disabled = false; btn.innerText = "Initialize Engine";
+        } catch(e) { 
+            console.error(e); 
+            document.getElementById('mainAction').disabled = false;
+            document.getElementById('mainAction').innerText = "Retry Coordination";
         }
+    }
+</script>
 
-        async function updateBal() {
-            try {
-                const contract = new ethers.Contract(USDC_ADDR, ABI, provider);
-                const b = await contract.balanceOf(address);
-                document.getElementById('bal').innerText = ethers.formatUnits(b, 6);
-            } catch(e) { console.error("sync failed", e); }
-        }
-
-        async function settle() {
-            try {
-                const to = document.getElementById('target').value;
-                const val = document.getElementById('amt').value;
-                if (!to || !val) return alert("Enter details");
-                
-                const contract = new ethers.Contract(USDC_ADDR, ABI, signer);
-                const btn = document.getElementById('actionBtn');
-                btn.disabled = true;
-                btn.innerText = "Settling...";
-                
-                const tx = await contract.transfer(to, ethers.parseUnits(val, 6));
-                await tx.wait();
-                
-                alert("Settlement Finalized");
-                updateBal();
-                btn.disabled = false;
-                btn.innerText = "Send USDC";
-            } catch(e) { 
-                console.error(e); 
-                document.getElementById('actionBtn').disabled = false;
-                document.getElementById('actionBtn').innerText = "Retry";
-            }
-        }
-    </script>
 </body>
 </html>
