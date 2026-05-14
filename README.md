@@ -1,62 +1,20 @@
 # ArcPro Wallet
 
-Simple Web3 wallet interface built for Arc ecosystem experimentation.
+Simple Web3 wallet for **Arc Testnet** (USDC native gas token).
 
-Supports:
-- MetaMask connection
-- live wallet balance
-- network detection
-- transaction confirmation
-- responsive mobile UI
+## Features
+- MetaMask Connect + Arc Testnet auto-switch
+- Send USDC (native)
+- Real-time balance & transaction history
+- Dark UI
 
----
+## How to Use
 
-# Features
+1. Wallet connect karo
+2. https://faucet.circle.com/ se USDC lo (Arc Testnet select karke)
+3. Recipient address daalo
+4. Amount select karke **Confirm Send** dabao
 
-- Wallet Connect
-- Real Wallet Balance
-- Network Detection
-- Send Transaction Flow
-- Confirmation Button
-- Mobile Responsive Design
-- GitHub + Vercel Ready
+**Note:** Arc pe USDC native gas token hai (18 decimals). Small amount se test karo.
 
----
-
-# Stack
-
-- HTML
-- CSS
-- JavaScript
-- Ethers.js
-- MetaMask
-
----
-
-# Deployment
-
-1. Upload files to GitHub
-2. Connect repository to Vercel
-3. Deploy automatically
-
----
-
-# Security
-
-This app never stores:
-- private keys
-- seed phrases
-- wallet passwords
-
-Users keep full wallet ownership through MetaMask.
-
----
-
-# Status
-
-Experimental infrastructure wallet build.
-
-Focused on:
-- usability
-- settlement simplicity
-- lightweight execution
+Live: https://arc-pro-wallet.vercel.app/
