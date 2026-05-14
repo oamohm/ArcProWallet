@@ -16,3 +16,7 @@ Arc Pro Wallet is a high-performance, non-custodial interface designed for the a
 
 ## 📦 Deployment
 Deploy the `index.html` via Vercel or any static host. Ensure the `USDC_ADDR` is mapped to the current Arc Scan contract address.
+## 📖 Usage
+1. Connect your MetaMask to Arc Testnet.
+2. Select your transaction type (Send, Swap, Pool, or Bridge).
+3. Input the parameters and click "Initialize Settlement".
