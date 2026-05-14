@@ -10,95 +10,78 @@
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
         .app-container { width: 100%; max-width: 450px; }
         .card { background: var(--card); border-radius: 24px; padding: 24px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; backdrop-filter: blur(20px); }
-        .logo { font-weight: 900; letter-spacing: -1.5px; font-size: 1.5em; margin-bottom: 20px; text-align: center; }
-        .balance-label { color: #94a3b8; font-size: 0.8em; text-align: center; }
-        .balance-value { font-size: 3em; font-weight: 800; text-align: center; margin: 10px 0; background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 16px; width: 100%; font-weight: 700; cursor: pointer; transition: 0.3s; }
-        .btn-main:disabled { opacity: 0.5; cursor: not-allowed; }
-        input { width: 100%; padding: 16px; margin: 8px 0; border-radius: 12px; border: 1px solid #1f2937; background: #000; color: white; box-sizing: border-box; outline: none; }
-        .status { font-size: 0.75em; text-align: center; margin-bottom: 15px; color: #ef4444; }
+        .balance-value { font-size: 3em; font-weight: 800; text-align: center; margin: 10px 0; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 16px; width: 100%; font-weight: 700; cursor: pointer; }
+        input { width: 100%; padding: 16px; margin: 8px 0; border-radius: 12px; border: 1px solid #1f2937; background: #000; color: white; box-sizing: border-box; }
+        .status { font-size: 0.8em; text-align: center; margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <div class="app-container">
         <div class="card">
-            <div class="logo">ARC<span style="color:var(--primary); font-weight: 300;">PRO</span></div>
-            <div class="status" id="status">● Disconnected</div>
-            <button class="btn-main" id="connectBtn" onclick="initWallet()">Link Core Identity</button>
+            <h2>ARC PRO</h2>
+            <div class="status" id="status">Disconnected</div>
+            <button class="btn-main" id="connectBtn" onclick="initWallet()">Connect Wallet</button>
         </div>
 
         <div class="card">
-            <div class="balance-label">USDC ASSET BALANCE</div>
+            <div style="color: #94a3b8; font-size: 0.8em;">USDC BALANCE</div>
             <div class="balance-value" id="bal">0.00</div>
-            <div id="addrDisplay" style="text-align:center; font-size:0.7em; color:var(--accent); margin-bottom:15px; opacity:0.6;">No Identity Detected</div>
-            
-            <input type="text" id="target" placeholder="Recipient Address (0x...)">
-            <input type="number" id="amt" placeholder="Settlement Amount">
-            <button class="btn-main" id="actionBtn" onclick="settle()">Initialize Settlement</button>
+            <input type="text" id="target" placeholder="Recipient (0x...)">
+            <input type="number" id="amt" placeholder="Amount">
+            <button class="btn-main" id="actionBtn" onclick="settle()">Send USDC</button>
         </div>
     </div>
 
     <script>
         let provider, signer, address;
-        
-        // IMPORTANT: Replace with actual Arc Testnet USDC contract address
-        const USDC_ADDR = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"; 
+        // Replace with actual Arc Testnet USDC Address from Arc Scan
+        const USDC_ADDR = "0x..."; 
         const ABI = [
-            "function transfer(address to, uint256 amount) returns (bool)",
+            "function transfer(address to, uint256 amount) returns (bool)", 
             "function balanceOf(address) view returns (uint256)"
         ];
 
         async function initWallet() {
-            if (!window.ethereum) return alert("Please install Metamask");
-            try {
-                provider = new ethers.BrowserProvider(window.ethereum);
-                const accounts = await provider.send("eth_requestAccounts", []);
-                signer = await provider.getSigner();
-                address = accounts[0];
-                
-                document.getElementById('status').innerText = "● Arc Node Active";
-                document.getElementById('status').style.color = "#10b981";
-                document.getElementById('connectBtn').innerText = "Identity Linked";
-                document.getElementById('addrDisplay').innerText = address;
-                
-                updateBal();
-            } catch (e) { console.error(e); }
+            if (!window.ethereum) return alert("Install Metamask");
+            provider = new ethers.BrowserProvider(window.ethereum);
+            const accounts = await provider.send("eth_requestAccounts", []);
+            signer = await provider.getSigner();
+            address = accounts[0];
+            document.getElementById('status').innerText = "Active: " + address.slice(0,6);
+            updateBal();
         }
 
         async function updateBal() {
-            if (!address) return;
             try {
                 const contract = new ethers.Contract(USDC_ADDR, ABI, provider);
                 const b = await contract.balanceOf(address);
-                // USDC typically uses 6 decimals
                 document.getElementById('bal').innerText = ethers.formatUnits(b, 6);
-            } catch (e) { console.error("Balance Error:", e); }
+            } catch(e) { console.error("sync failed", e); }
         }
 
         async function settle() {
-            if (!signer) return alert("Link Wallet First");
-            const to = document.getElementById('target').value;
-            const val = document.getElementById('amt').value;
-            const btn = document.getElementById('actionBtn');
-
-            if (!to || !val) return alert("Enter details");
-
             try {
-                btn.disabled = true;
-                btn.innerText = "Coordinating...";
+                const to = document.getElementById('target').value;
+                const val = document.getElementById('amt').value;
+                if (!to || !val) return alert("Enter details");
                 
                 const contract = new ethers.Contract(USDC_ADDR, ABI, signer);
-                const tx = await contract.transfer(to, ethers.parseUnits(val, 6));
+                const btn = document.getElementById('actionBtn');
+                btn.disabled = true;
+                btn.innerText = "Settling...";
                 
+                const tx = await contract.transfer(to, ethers.parseUnits(val, 6));
                 await tx.wait();
-                alert("Settlement Finalized!");
+                
+                alert("Settlement Finalized");
                 updateBal();
-            } catch(e) { 
-                console.error(e);
-                alert("Transaction Failed");
-            } finally {
                 btn.disabled = false;
-                btn.innerText = "Initialize Settlement";
+                btn.innerText = "Send USDC";
+            } catch(e) { 
+                console.error(e); 
+                document.getElementById('actionBtn').disabled = false;
+                document.getElementById('actionBtn').innerText = "Retry";
             }
         }
     </script>
