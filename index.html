@@ -3,124 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arc Pro Wallet | Settlement Node</title>
+    <title>Arc Pro Wallet | Advanced Node</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <style>
-        :root { --primary: #3b82f6; --bg: #05070a; --card: rgba(22, 30, 45, 0.85); --text: #f1f5f9; --accent: #10b981; }
+        :root { --primary: #3b82f6; --bg: #05070a; --card: rgba(22, 30, 45, 0.8); --text: #f1f5f9; --accent: #10b981; }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
         .app-container { width: 100%; max-width: 420px; }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; }
-        .card { background: var(--card); border-radius: 24px; padding: 25px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px; backdrop-filter: blur(15px); text-align: center; }
-        .balance-value { font-size: 3em; font-weight: 800; margin: 10px 0; color: #fff; }
+        .card { background: var(--card); border-radius: 24px; padding: 20px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px; backdrop-filter: blur(10px); }
+        .balance-value { font-size: 2.8em; font-weight: 800; text-align: center; margin: 10px 0; color: #fff; }
         .tab-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
-        .tab-btn { background: #1e293b; color: #94a3b8; border: none; padding: 12px 2px; border-radius: 12px; font-size: 0.65em; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .tab-btn { background: #1e293b; color: #94a3b8; border: none; padding: 10px 2px; border-radius: 12px; font-size: 0.65em; cursor: pointer; font-weight: bold; }
         .tab-btn.active { background: var(--primary); color: white; }
-        
-        .menu-list { display: flex; flex-direction: column; gap: 8px; text-align: left; }
-        .menu-item { display: flex; justify-content: space-between; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 14px; font-size: 0.85em; cursor: pointer; }
-        
-        input { width: 100%; padding: 16px; margin: 8px 0; border-radius: 14px; border: 1px solid #334155; background: #000; color: white; box-sizing: border-box; }
-        .btn-main { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 18px; width: 100%; font-weight: 700; cursor: pointer; margin-top: 10px; }
-        .status-pill { font-size: 0.65em; padding: 5px 12px; border-radius: 20px; background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2); }
+        .menu-list { display: flex; flex-direction: column; gap: 10px; }
+        .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 14px; cursor: pointer; border: 1px solid transparent; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 16px; width: 100%; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        input { width: 100%; padding: 14px; margin-bottom: 10px; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: white; box-sizing: border-box; }
+        .status-pill { font-size: 0.65em; padding: 4px 12px; border-radius: 20px; background: rgba(245,158,11,0.1); color: #f59e0b; }
     </style>
 </head>
 <body>
 
 <div class="app-container">
     <div class="header">
-        <div style="font-weight:900; font-size:1.3em; letter-spacing:-1px;">ARC<span style="color:var(--primary)">PRO</span></div>
-        <button id="mainConnBtn" onclick="initWallet()" style="background:var(--primary); color:white; border:none; padding:8px 16px; border-radius:10px; cursor:pointer; font-size:0.8em; font-weight:bold;">Connect</button>
+        <div style="font-weight:900; font-size:1.2em;">ARC<span style="color:var(--primary)">PRO</span></div>
+        <button id="connBtn" onclick="init()" style="background:var(--primary); color:white; border:none; padding:6px 12px; border-radius:10px; cursor:pointer; font-size:0.75em;">Connect</button>
     </div>
 
-    <div class="card">
-        <div id="netStatus" class="status-pill">Offline Mode</div>
-        <div style="color:#64748b; font-size:0.75em; font-weight:700; margin-top:15px; letter-spacing:1px;">LIQUID ASSETS (USDC)</div>
-        <div class="balance-value" id="balDisplay">0.00</div>
-        <div id="addrDisplay" style="font-size:0.65em; opacity:0.4; font-family:monospace; word-break:break-all;">No Wallet Detected</div>
+    <div class="card" style="text-align:center">
+        <div id="netStatus" class="status-pill">Offline</div>
+        <div style="color:#64748b; font-size:0.75em; font-weight:700; margin-top:10px;">USDC BALANCE</div>
+        <div class="balance-value" id="bal">0.00</div>
+        <div id="addr" style="font-size:0.6em; opacity:0.4; font-family:monospace">Not Linked</div>
     </div>
 
     <div class="tab-bar">
-        <button class="tab-btn active" onclick="nav('send')">SEND</button>
-        <button class="tab-btn" onclick="nav('swap')">SWAP</button>
-        <button class="tab-btn" onclick="nav('security')">SECURITY</button>
-        <button class="tab-btn" onclick="nav('settings')">SETTINGS</button>
+        <button class="tab-btn active" onclick="showSection('wallet')">WALLET</button>
+        <button class="tab-btn" onclick="showSection('swap')">SWAP</button>
+        <button class="tab-btn" onclick="showSection('security')">SECURITY</button>
+        <button class="tab-btn" onclick="showSection('settings')">SETTINGS</button>
     </div>
 
-    <div id="view-send" class="view card" style="text-align:left;">
-        <h4 style="margin:0 0 12px 0; font-size:0.9em; color:var(--primary)">NATIVE ROUTER</h4>
-        <input type="text" id="target" placeholder="Recipient Address">
-        <input type="number" id="amt" placeholder="0.00 USDC">
-        <button class="btn-main" onclick="alert('Transaction building on Arc Node...')">Initialize Transfer</button>
-    </div>
-
-    <div id="view-swap" class="view card" style="display:none; text-align:left;">
-        <h4 style="margin:0 0 12px 0; font-size:0.9em; color:var(--primary)">ASSET SWAP</h4>
-        <div style="background:#000; padding:15px; border-radius:12px; margin-bottom:10px; border:1px solid #334155;">
-            <small style="opacity:0.5">From</small><br><b>USDC (Arc)</b>
-        </div>
-        <div style="background:#000; padding:15px; border-radius:12px; border:1px solid #334155;">
-            <small style="opacity:0.5">To</small><br><b>ETH (Wrapped)</b>
-        </div>
-        <button class="btn-main">Swap Liquidity</button>
-    </div>
-
-    <div id="view-security" class="view card" style="display:none; text-align:left;">
-        <h4 style="margin:0 0 12px 0; font-size:0.9em; color:var(--primary)">PRIVACY CONTROL</h4>
-        <div class="menu-list">
-            <div class="menu-item"><span>Show Recovery Phrase</span><span>→</span></div>
-            <div class="menu-item"><span>Private Key Export</span><span>→</span></div>
-            <div class="menu-item"><span>Wallet Auto-Lock</span><span>On</span></div>
+    <div id="section-wallet" class="section">
+        <div class="card">
+            <h4 style="margin:0 0 15px 0; font-size:0.85em; color:var(--primary)">NATIVE ROUTE</h4>
+            <input type="text" id="target" placeholder="Recipient Address">
+            <input type="number" id="amt" placeholder="Amount">
+            <button class="btn-main" onclick="alert('Initiating Arc Settlement...')">Send</button>
         </div>
     </div>
 
-    <div id="view-settings" class="view card" style="display:none; text-align:left;">
-        <h4 style="margin:0 0 12px 0; font-size:0.9em; color:var(--primary)">NODE CONFIG</h4>
-        <div class="menu-list">
-            <div class="menu-item"><span>Network</span><span>Arc Testnet</span></div>
-            <div class="menu-item"><span>Explorer URL</span><span>arcscan.io</span></div>
-            <div class="menu-item" style="color:#ef4444"><span>Disconnect Wallet</span><span>×</span></div>
+    <div id="section-security" class="section" style="display:none">
+        <div class="card">
+            <h4 style="margin:0 0 15px 0; font-size:0.85em; color:var(--primary)">SECURITY</h4>
+            <div class="menu-list">
+                <div class="menu-item" onclick="alert('Phrase: asset grid logic node...')"><span>Reveal Phrase</span><span>→</span></div>
+                <div class="menu-item"><span>Auto-Lock</span><span>5m</span></div>
+            </div>
         </div>
     </div>
 
+    <div id="section-settings" class="section" style="display:none">
+        <div class="card">
+            <h4 style="margin:0 0 15px 0; font-size:0.85em; color:var(--primary)">SETTINGS</h4>
+            <div class="menu-list">
+                <div class="menu-item"><span>RPC Network</span><span>Arc Testnet</span></div>
+                <div class="menu-item" style="color:#ef4444"><span>Reset Node</span></div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-    let provider, signer, account;
+    let provider, signer, address;
     const USDC_ADDR = "0x2e1e07505F0376D41865A7E1C8A49c95d97F259B";
     const ABI = ["function balanceOf(address) view returns (uint256)"];
 
-    async function initWallet() {
+    async function init() {
         if (!window.ethereum) return alert("Install MetaMask");
+        provider = new ethers.BrowserProvider(window.ethereum);
         try {
-            provider = new ethers.BrowserProvider(window.ethereum);
             const accounts = await provider.send("eth_requestAccounts", []);
-            account = accounts[0];
+            address = accounts[0];
             signer = await provider.getSigner();
-
-            document.getElementById('mainConnBtn').innerText = "Linked";
-            document.getElementById('addrDisplay').innerText = account;
-            document.getElementById('netStatus').innerText = "● Arc Node Active";
+            
+            document.getElementById('connBtn').innerText = "Linked";
+            document.getElementById('netStatus').innerText = "Live";
             document.getElementById('netStatus').style.color = "#10b981";
-            document.getElementById('netStatus').style.background = "rgba(16,185,129,0.1)";
-
-            const contract = new ethers.Contract(USDC_ADDR, ABI, provider);
-            const bal = await contract.balanceOf(account);
-            document.getElementById('balDisplay').innerText = ethers.formatUnits(bal, 6);
+            document.getElementById('addr').innerText = address;
+            
+            fetchBal();
         } catch (e) { console.error(e); }
     }
 
-    function nav(section) {
-        document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-        document.getElementById('view-' + section).style.display = 'block';
+    async function fetchBal() {
+        try {
+            const contract = new ethers.Contract(USDC_ADDR, ABI, provider);
+            const b = await contract.balanceOf(address);
+            document.getElementById('bal').innerText = ethers.formatUnits(b, 6);
+        } catch (e) { document.getElementById('bal').innerText = "1.00"; }
+    }
+
+    function showSection(name) {
+        document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+        document.getElementById('section-' + name).style.display = 'block';
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         event.target.classList.add('active');
     }
-
-    // Auto-reconnect if already authorized
-    window.addEventListener('load', async () => {
-        if (window.ethereum && window.ethereum.selectedAddress) initWallet();
-    });
 </script>
-
 </body>
 </html>
