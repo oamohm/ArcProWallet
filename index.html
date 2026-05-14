@@ -4,9 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>ArcPro Wallet</title>
 
@@ -14,29 +12,20 @@ content="width=device-width, initial-scale=1.0">
 
 <style>
 
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial;
-}
-
 body{
 background:#050816;
 color:white;
+font-family:Arial;
 padding:20px;
-}
-
-.container{
-max-width:430px;
-margin:auto;
 }
 
 .card{
+max-width:420px;
+margin:auto;
 background:#0b1222;
-border:1px solid #1d2a52;
-border-radius:22px;
 padding:20px;
+border-radius:20px;
+border:1px solid #1d2a52;
 margin-top:20px;
 }
 
@@ -45,79 +34,47 @@ font-size:28px;
 font-weight:bold;
 }
 
-.subtitle{
-margin-top:8px;
-color:#8ea2ff;
-font-size:14px;
-}
-
-.balanceBox{
-margin-top:20px;
-background:#09101d;
-padding:20px;
-border-radius:18px;
-}
-
-.balanceText{
-color:#8ca0ff;
-font-size:14px;
-}
-
-.balanceValue{
-font-size:34px;
-font-weight:bold;
-margin-top:10px;
-color:#00ff9d;
-}
-
-.wallet{
-margin-top:15px;
-font-size:14px;
-word-break:break-word;
-}
-
-.network{
-margin-top:10px;
-font-size:14px;
-color:#8ca0ff;
-}
-
 button{
 width:100%;
 padding:15px;
+margin-top:15px;
 border:none;
-border-radius:14px;
+border-radius:12px;
 background:#3154ff;
 color:white;
 font-size:16px;
 cursor:pointer;
-margin-top:15px;
-font-weight:bold;
 }
 
 input{
 width:100%;
 padding:15px;
 margin-top:12px;
-background:#09101d;
+border-radius:12px;
 border:1px solid #22345f;
-border-radius:14px;
+background:#09101d;
 color:white;
 }
 
-.status{
-margin-top:15px;
+.balance{
+font-size:30px;
+margin-top:20px;
+color:#00ff9d;
+}
+
+.small{
+margin-top:10px;
 font-size:14px;
-color:#91a4ff;
+color:#8ca0ff;
 word-break:break-word;
 }
 
-.confirmBox{
+#confirmBox{
 display:none;
 margin-top:20px;
 padding:15px;
 background:#101a31;
-border-radius:14px;
+border-radius:12px;
 }
 
 .row{
@@ -125,19 +82,19 @@ display:flex;
 gap:10px;
 }
 
-.cancelBtn{
-background:#2a3554;
+.cancel{
+background:#2c3550;
 }
 
-.confirmBtn{
+.confirm{
 background:#00a86b;
 }
 
-.footer{
-margin-top:30px;
-text-align:center;
-font-size:12px;
-color:#7080aa;
+.status{
+margin-top:15px;
+font-size:14px;
+word-break:break-word;
+color:#9db0ff;
 }
 
 </style>
@@ -146,43 +103,29 @@ color:#7080aa;
 
 <body>
 
-<div class="container">
-
 <div class="card">
 
 <div class="title">
 ArcPro Wallet
 </div>
 
-<div class="subtitle">
-Universal Settlement Interface
-</div>
-
 <button onclick="connectWallet()">
 Connect Wallet
 </button>
 
-<div class="wallet"
-id="walletAddress">
+<div class="small"
+id="wallet">
 Wallet Not Connected
 </div>
 
-<div class="network"
+<div class="small"
 id="network">
 Network: Disconnected
 </div>
 
-<div class="balanceBox">
-
-<div class="balanceText">
-Wallet Balance
-</div>
-
-<div class="balanceValue"
+<div class="balance"
 id="balance">
-0.0000
-</div>
-
+0.0000 ETH
 </div>
 
 </div>
@@ -197,27 +140,26 @@ placeholder="Recipient Address">
 
 <input
 id="amount"
-placeholder="Amount In ETH">
+placeholder="Amount">
 
-<button onclick="prepareTransaction()">
+<button onclick="prepareSend()">
 Continue
 </button>
 
-<div class="confirmBox"
-id="confirmBox">
+<div id="confirmBox">
 
-<div id="confirmDetails"></div>
+<div id="confirmText"></div>
 
 <div class="row">
 
 <button
-class="cancelBtn"
-onclick="cancelTransaction()">
+class="cancel"
+onclick="cancelSend()">
 Cancel
 </button>
 
 <button
-class="confirmBtn"
+class="confirm"
 onclick="sendTransaction()">
 Confirm
 </button>
@@ -228,12 +170,6 @@ Confirm
 
 <div class="status"
 id="status"></div>
-
-</div>
-
-<div class="footer">
-Built For Arc Ecosystem
-</div>
 
 </div>
 
@@ -249,13 +185,12 @@ try{
 
 if(!window.ethereum){
 
-alert("Install MetaMask Wallet");
+alert("Install MetaMask");
 
 return;
 
 }
 
-const accounts =
 await window.ethereum.request({
 method:"eth_requestAccounts"
 });
@@ -266,10 +201,11 @@ new ethers.BrowserProvider(window.ethereum);
 signer =
 await provider.getSigner();
 
-userAddress = accounts[0];
+userAddress =
+await signer.getAddress();
 
 document.getElementById(
-"walletAddress"
+"wallet"
 ).innerHTML =
 "Wallet: " +
 userAddress.substring(0,8) +
@@ -282,8 +218,7 @@ await provider.getNetwork();
 document.getElementById(
 "network"
 ).innerHTML =
-"Network: " +
-network.name;
+"Network: " + network.name;
 
 loadBalance();
 
@@ -291,7 +226,7 @@ loadBalance();
 
 console.log(err);
 
-alert("Wallet Connection Failed");
+alert("Connection Failed");
 
 }
 
@@ -310,22 +245,18 @@ ethers.formatEther(balanceWei);
 document.getElementById(
 "balance"
 ).innerHTML =
-Number(balanceEth).toFixed(4) + " ETH";
+Number(balanceEth).toFixed(4) +
+" ETH";
 
 }catch(err){
 
 console.log(err);
 
-document.getElementById(
-"balance"
-).innerHTML =
-"Unavailable";
-
 }
 
 }
 
-function prepareTransaction(){
+function prepareSend(){
 
 const recipient =
 document.getElementById(
@@ -350,10 +281,10 @@ document.getElementById(
 ).style.display = "block";
 
 document.getElementById(
-"confirmDetails"
+"confirmText"
 ).innerHTML =
 `
-Send <b>${amount} ETH</b>
+Send ${amount} ETH
 <br><br>
 To:
 <br>
@@ -362,7 +293,7 @@ ${recipient}
 
 }
 
-function cancelTransaction(){
+function cancelSend(){
 
 document.getElementById(
 "confirmBox"
@@ -386,48 +317,44 @@ document.getElementById(
 
 if(!ethers.isAddress(recipient)){
 
-alert("Invalid Wallet Address");
+alert("Invalid Address");
 
 return;
 
 }
-
-if(Number(amount) <= 0){
-
-alert("Enter Valid Amount");
-
-return;
-
-}
-
-document.getElementById(
-"status"
-).innerHTML =
-"Opening Wallet Confirmation...";
-
-const balance =
-await provider.getBalance(userAddress);
 
 const value =
 ethers.parseEther(amount);
 
-if(balance < value){
+const balance =
+await provider.getBalance(userAddress);
+
+const gasReserve =
+ethers.parseEther("0.0005");
+
+if(balance < value + gasReserve){
 
 document.getElementById(
 "status"
 ).innerHTML =
-"Insufficient Balance";
+"Low Balance For Gas Fee";
 
 return;
 
 }
+
+document.getElementById(
+"status"
+).innerHTML =
+"Waiting For Wallet Confirmation...";
 
 const tx =
 await signer.sendTransaction({
 
 to: recipient,
 
-value: value
+value: value,
+gasLimit: 21000
 
 });
 
@@ -443,11 +370,11 @@ document.getElementById(
 ).innerHTML =
 "Transaction Successful";
 
+loadBalance();
+
 document.getElementById(
 "confirmBox"
 ).style.display = "none";
-
-loadBalance();
 
 }catch(err){
 
@@ -456,27 +383,11 @@ console.log(err);
 document.getElementById(
 "status"
 ).innerHTML =
-err.reason ||
-err.message ||
-"Transaction Failed";
+"Transaction Rejected Or Failed";
 
 }
 
 }
-
-window.ethereum?.on(
-"accountsChanged",
-() => {
-connectWallet();
-}
-);
-
-window.ethereum?.on(
-"chainChanged",
-() => {
-window.location.reload();
-}
-);
 
 </script>
 
