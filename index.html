@@ -2,140 +2,156 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>ArcPro | Universal Router</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --p: #3b82f6; --bg: #01040a; --s: #0f172a; --t: #ffffff; --glass: rgba(15, 23, 42, 0.8); }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-        body { background: var(--bg); color: var(--t); font-family: 'Inter', sans-serif; display: flex; justify-content: center; height: 100vh; overflow: hidden; }
-
-        .app-container { width: 100%; max-width: 430px; height: 100vh; display: flex; flex-direction: column; position: relative; background: radial-gradient(circle at 50% 0%, #1e293b 0%, #01040a 100%); }
-
-        /* Header */
-        .hdr { padding: 40px 25px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
-        .logo { font-weight: 900; font-size: 1.4em; letter-spacing: -1px; background: linear-gradient(to right, #fff, #64748b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .node-tag { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); padding: 6px 12px; border-radius: 20px; font-size: 0.6em; font-weight: 800; display: flex; align-items: center; gap: 6px; }
-        .pulse { width: 6px; height: 6px; background: #10b981; border-radius: 50%; box-shadow: 0 0 10px #10b981; animation: bl 2s infinite; }
-        @keyframes bl { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-
-        /* Balance Display (Exact Pawan Style) */
-        .hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding-bottom: 50px; }
-        .bal-wrap { text-align: center; }
-        .bal-lbl { color: #64748b; font-size: 0.7em; font-weight: 700; letter-spacing: 2px; margin-bottom: 10px; }
-        .bal-val { font-size: 4em; font-weight: 800; letter-spacing: -2px; }
-        .sync-btn { margin-top: 15px; background: rgba(59, 130, 246, 0.1); color: var(--p); border: 1px solid rgba(59,130,246,0.2); padding: 8px 20px; border-radius: 12px; font-size: 0.65em; font-weight: 700; cursor: pointer; }
-
-        /* Bottom Floating Panel */
-        .sheet { background: var(--glass); border-top: 1px solid rgba(255,255,255,0.08); border-radius: 40px 40px 0 0; padding: 30px 25px 120px; backdrop-filter: blur(25px); position: relative; z-index: 5; box-shadow: 0 -20px 40px rgba(0,0,0,0.4); }
-        .sheet-title { font-size: 0.85em; font-weight: 800; color: var(--p); margin-bottom: 25px; letter-spacing: 1px; display: flex; align-items: center; gap: 10px; }
+        :root { --p: #3b82f6; --bg: #01040a; --s: #0f172a; --glass: rgba(15, 23, 42, 0.9); }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         
-        .input-group { background: #000; border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 20px; margin-bottom: 12px; }
-        .input-group label { display: block; font-size: 0.55em; color: #475569; font-weight: 800; margin-bottom: 6px; }
+        body { 
+            background: var(--bg); 
+            color: #fff; 
+            font-family: 'Inter', sans-serif; 
+            height: 100vh; 
+            width: 100vw; 
+            overflow: hidden; /* Scroll band karne ke liye */
+            display: flex;
+            justify-content: center;
+        }
+
+        .app-shell {
+            width: 100%;
+            max-width: 430px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background: radial-gradient(circle at 50% 0%, #1e293b 0%, #01040a 100%);
+        }
+
+        /* Fixed Header */
+        .hdr { padding: 50px 25px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-weight: 900; font-size: 1.4em; letter-spacing: -1px; }
+        .status { background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); padding: 6px 12px; border-radius: 20px; font-size: 0.6em; font-weight: 800; display: flex; align-items: center; gap: 6px; }
+
+        /* Centered Balance */
+        .hero { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; transform: translateY(-30px); }
+        .bal-lbl { color: #64748b; font-size: 0.7em; font-weight: 700; letter-spacing: 2px; margin-bottom: 5px; }
+        .bal-val { font-size: 4.2em; font-weight: 800; letter-spacing: -2px; }
+
+        /* Floating Interactive Sheet (Pawan Style) */
+        .sheet { 
+            background: var(--glass); 
+            border-top: 1px solid rgba(255,255,255,0.08); 
+            border-radius: 40px 40px 0 0; 
+            padding: 30px 25px 140px; /* Space for Nav */
+            backdrop-filter: blur(30px);
+            margin-top: auto;
+        }
+
+        .title { font-size: 0.9em; font-weight: 800; color: var(--p); margin-bottom: 25px; display: flex; align-items: center; gap: 10px; }
+        
+        .input-box { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 22px; margin-bottom: 12px; }
+        .input-box label { display: block; font-size: 0.55em; color: #475569; font-weight: 800; margin-bottom: 6px; }
         input { background: transparent; border: none; color: #fff; width: 100%; outline: none; font-size: 1.1em; font-weight: 600; }
         
-        .action-btn { background: var(--p); color: white; border: none; width: 100%; padding: 20px; border-radius: 22px; font-weight: 800; font-size: 1em; cursor: pointer; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3); }
+        .btn { background: var(--p); color: white; border: none; width: 100%; padding: 20px; border-radius: 24px; font-weight: 800; font-size: 1em; cursor: pointer; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3); }
 
-        /* Navigation (Fixed at Bottom) */
-        .nav-bar { position: absolute; bottom: 30px; left: 20px; right: 20px; height: 80px; background: rgba(10, 15, 26, 0.95); border: 1px solid rgba(255,255,255,0.1); border-radius: 28px; display: flex; justify-content: space-around; align-items: center; z-index: 100; backdrop-filter: blur(10px); }
-        .nav-link { color: #475569; display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; transition: 0.3s; width: 25%; }
-        .nav-link.active { color: var(--p); }
-        .nav-link i { font-size: 1.3em; }
-        .nav-link span { font-size: 0.55em; font-weight: 800; }
+        /* Nav Bar - Bottom Fixed */
+        .nav { 
+            position: absolute; 
+            bottom: 30px; 
+            left: 20px; 
+            right: 20px; 
+            height: 85px; 
+            background: rgba(10, 15, 26, 0.9); 
+            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 32px; 
+            display: flex; 
+            justify-content: space-around; 
+            align-items: center; 
+            backdrop-filter: blur(15px);
+            z-index: 100;
+        }
+
+        .tab { color: #475569; display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: 0.3s; width: 25%; }
+        .tab.active { color: var(--p); }
+        .tab i { font-size: 1.4em; }
+        .tab span { font-size: 0.55em; font-weight: 800; }
 
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
+<div class="app-shell">
     <div class="hdr">
-        <div class="logo">ARC<span style="opacity:0.5; font-weight:300;">PRO</span></div>
-        <div class="node-tag"><div class="pulse"></div> NODE SYNCHRONIZED</div>
+        <div class="logo">ARC<span style="opacity:0.4;">PRO</span></div>
+        <div class="status"><i class="fas fa-circle" style="font-size:0.5em;"></i> NODE ONLINE</div>
     </div>
 
     <div class="hero">
-        <div class="bal-wrap">
-            <div class="bal-lbl">NET ASSET VOLUME</div>
-            <div class="bal-val" id="mainBal">1.00</div>
-            <button class="sync-btn" onclick="initNode()" id="nodeBtn">Initialize Connection</button>
-        </div>
+        <div class="bal-lbl">SETTLEMENT ASSETS</div>
+        <div class="bal-val" id="bal">1.00</div>
+        <div style="font-size:0.65em; color:var(--p); margin-top:10px; font-family:monospace;" id="addr" onclick="conn()">Link Arc Node</div>
     </div>
 
     <div class="sheet">
-        <div id="v-send">
-            <div class="sheet-title"><i class="fas fa-paper-plane"></i> NATIVE SETTLEMENT</div>
-            <div class="input-group"><label>RECIPIENT NODE</label><input type="text" placeholder="0x..." id="target"></div>
-            <div class="input-group"><label>VOLUME (USDC)</label><input type="number" placeholder="0.00" id="amt"></div>
-            <button class="action-btn" onclick="exec()">Process Route</button>
+        <div id="v-router">
+            <div class="title"><i class="fas fa-bolt"></i> NATIVE ROUTER</div>
+            <div class="input-box"><label>DESTINATION NODE</label><input type="text" placeholder="0x..." id="to"></div>
+            <div class="input-box"><label>VOLUME (USDC)</label><input type="number" placeholder="0.00" id="v"></div>
+            <button class="btn" onclick="run()">Initiate Route</button>
         </div>
 
-        <div id="v-sec" class="hidden">
-            <div class="sheet-title"><i class="fas fa-shield-halved"></i> SECURITY CONFIG</div>
-            <div class="input-group" style="cursor:pointer" onclick="alert('Recovery Key: Alpha Bravo Charlie...')">
+        <div id="v-security" class="hidden">
+            <div class="title"><i class="fas fa-shield-halved"></i> SECURITY VAULT</div>
+            <div class="input-box" onclick="alert('Recovery Key: Alpha Bravo...')">
                 <label>ENCRYPTED SEED</label>
-                <div style="font-size:0.9em; font-weight:700; color:#fff;">Reveal Recovery Phrase</div>
+                <div style="font-size:0.95em; font-weight:700;">Reveal Recovery Phrase</div>
             </div>
-            <div class="input-group">
-                <label>STATUS</label>
-                <div style="font-size:0.9em; font-weight:700; color:var(--p);">Node Integrity Verified</div>
+            <div class="input-box">
+                <label>NODE STATUS</label>
+                <div style="font-size:0.95em; font-weight:700; color:var(--p);">Integrity Verified</div>
             </div>
-        </div>
-
-        <div id="v-swap" class="hidden">
-            <div class="sheet-title"><i class="fas fa-shuffle"></i> LIQUIDITY SWAP</div>
-            <div class="input-group"><label>FROM</label><input type="text" value="USDC (Arc)" disabled></div>
-            <div class="input-group"><label>TO</label><input type="text" value="ETH (Base)" disabled></div>
-            <button class="action-btn">Authorize Swap</button>
         </div>
     </div>
 
-    <div class="nav-bar">
-        <div class="nav-link active" onclick="tab('send')"><i class="fas fa-bolt-lightning"></i><span>ROUTER</span></div>
-        <div class="nav-link" onclick="tab('swap')"><i class="fas fa-repeat"></i><span>SWAP</span></div>
-        <div class="nav-link" onclick="tab('security')"><i class="fas fa-lock"></i><span>SECURITY</span></div>
-        <div class="nav-link" onclick="tab('config')"><i class="fas fa-sliders"></i><span>CONFIG</span></div>
+    <div class="nav">
+        <div class="tab active" onclick="sw('router')"><i class="fas fa-route"></i><span>ROUTER</span></div>
+        <div class="tab" onclick="sw('swap')"><i class="fas fa-arrows-rotate"></i><span>SWAP</span></div>
+        <div class="tab" onclick="sw('security')"><i class="fas fa-lock"></i><span>SECURITY</span></div>
+        <div class="tab" onclick="sw('config')"><i class="fas fa-gear"></i><span>CONFIG</span></div>
     </div>
 </div>
 
 <script>
-    let provider, account;
-    const USDC = "0x2e1e07505F0376D41865A7E1C8A49c95d97F259B";
-    const ABI = ["function balanceOf(address) view returns (uint256)"];
-
-    async function initNode() {
-        if (!window.ethereum) return alert("Install Metamask");
-        provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await provider.send("eth_requestAccounts", []);
-        account = accounts[0];
-        document.getElementById('nodeBtn').innerText = account.slice(0,6)+'...'+account.slice(-4);
-        syncBal();
+    let p, a;
+    async function conn() {
+        if (!window.ethereum) return;
+        p = new ethers.BrowserProvider(window.ethereum);
+        const ac = await p.send("eth_requestAccounts", []);
+        a = ac[0];
+        document.getElementById('addr').innerText = a.slice(0,6)+'...'+a.slice(-4);
+        sync();
     }
-
-    async function syncBal() {
+    async function sync() {
         try {
-            const c = new ethers.Contract(USDC, ABI, provider);
-            const b = await c.balanceOf(account);
-            document.getElementById('mainBal').innerText = ethers.formatUnits(b, 6);
-        } catch(e) { document.getElementById('mainBal').innerText = "1.00"; }
+            const c = new ethers.Contract("0x2e1e07505F0376D41865A7E1C8A49c95d97F259B", ["function balanceOf(address) view returns (uint256)"], p);
+            const b = await c.balanceOf(a);
+            document.getElementById('bal').innerText = ethers.formatUnits(b, 6);
+        } catch(e) { document.getElementById('bal').innerText = "1.00"; }
     }
-
-    function tab(name) {
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+    function sw(n) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         event.currentTarget.classList.add('active');
-        
-        document.getElementById('v-send').classList.add('hidden');
-        document.getElementById('v-sec').classList.add('hidden');
-        document.getElementById('v-swap').classList.add('hidden');
-
-        if(name === 'send') document.getElementById('v-send').classList.remove('hidden');
-        if(name === 'security') document.getElementById('v-sec').classList.remove('hidden');
-        if(name === 'swap') document.getElementById('v-swap').classList.remove('hidden');
+        document.getElementById('v-router').classList.toggle('hidden', n !== 'router');
+        document.getElementById('v-security').classList.toggle('hidden', n !== 'security');
     }
-
-    function exec() { alert("Initializing Settlement Route..."); }
-    if(window.ethereum?.selectedAddress) initNode();
+    function run() { alert("Coordinating Arc Node..."); }
+    if(window.ethereum?.selectedAddress) conn();
 </script>
 </body>
 </html>
