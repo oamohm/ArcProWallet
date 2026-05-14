@@ -1,150 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ArcPro Wallet</title>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.1/dist/ethers.umd.min.js"></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial;
+}
+
+body{
+background:#050816;
+color:white;
+padding:20px;
+}
+
+.container{
+max-width:430px;
+margin:auto;
+}
+
+.card{
+background:#0b1222;
+border:1px solid #1d2a52;
+border-radius:22px;
+padding:20px;
+margin-top:20px;
+box-shadow:0 0 20px rgba(0,0,0,0.4);
+}
+
+.title{
+font-size:28px;
+font-weight:bold;
+margin-bottom:8px;
+}
+
+.subtitle{
+color:#8b9cff;
+font-size:14px;
+}
+
+.balanceBox{
+margin-top:20px;
+padding:18px;
+background:#09101d;
+border-radius:16px;
+}
+
+.balanceText{
+font-size:14px;
+color:#8ba2ff;
+}
+
+.balanceValue{
+font-size:32px;
+font-weight:bold;
+margin-top:8px;
+color:#00ff9d;
+}
+
+.network{
+margin-top:10px;
+color:#91a4ff;
+font-size:14px;
+}
+
+button{
+width:100%;
+padding:15px;
+border:none;
+border-radius:14px;
+background:#3154ff;
+color:white;
+font-size:16px;
+cursor:pointer;
+margin-top:15px;
+font-weight:bold;
+}
+
+button:hover{
+opacity:0.9;
+}
+
+input{
+width:100%;
+padding:15px;
+margin-top:12px;
+background:#09101d;
+border:1px solid #23345f;
+border-radius:14px;
+color:white;
+font-size:15px;
+}
+
+.status{
+margin-top:15px;
+font-size:14px;
+color:#9db0ff;
+word-break:break-word;
+}
+
+.wallet{
+margin-top:15px;
+font-size:14px;
+color:#ffffff;
+word-break:break-word;
+}
+
+.confirmBox{
+display:none;
+margin-top:20px;
+padding:15px;
+background:#111b33;
+border-radius:16px;
+border:1px solid #304579;
+}
+
+.confirmTitle{
+font-size:16px;
+margin-bottom:10px;
+}
+
+.confirmButtons{
+display:flex;
+gap:10px;
+}
+
+.confirmButtons button{
+margin-top:10px;
+}
+
+.cancelBtn{
+background:#222d4a;
+}
+
+.sendBtn{
+background:#00a86b;
+}
+
+.footer{
+margin-top:30px;
+text-align:center;
+font-size:12px;
+color:#6f7ea8;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="card">
+
+<div class="title">ArcPro Wallet</div>
+
+<div class="subtitle">
+Universal Settlement Interface
+</div>
+
+<button onclick="connectWallet()">
+Connect Wallet
+</button>
+
+<div class="wallet" id="walletAddress">
+Wallet Not Connected
+</div>
+
+<div class="network" id="network">
+Network: Disconnected
+</div>
+
+<div class="balanceBox">
+
+<div class="balanceText">
+USDC Balance
+</div>
+
+<div class="balanceValue" id="balance">
+0.00
+</div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<h3>Send USDC</h3>
+
+<input id="recipient" placeholder="Recipient Address">
+
+<input id="amount" placeholder="Amount">
+
+<button onclick="prepareTransaction()">
+Continue
+</button>
+
+<div class="confirmBox" id="confirmBox">
+
+<div class="confirmTitle">
+Confirm Transaction
+</div>
+
+<div id="confirmDetails"></div>
+
+<div class="confirmButtons">
+
+<button class="cancelBtn"
+onclick="cancelTransaction()">
+Cancel
+</button>
+
+<button class="sendBtn"
+onclick="sendUSDC()">
+Confirm Send
+</button>
+
+</div>
+
+</div>
+
+<div class="status" id="status"></div>
+
+</div>
+
+<div class="footer">
+Built For Arc Network
+</div>
+
+</div>
+
 <script>
 
 let provider;
 let signer;
 let userAddress;
 
-const chainId = "0x66eee";
-
-const usdcAddress = "0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d";
+const usdcAddress =
+"0x75faf114eafb1BDbe2F0316DF893fd58CE46AA4d";
 
 const usdcABI = [
-  "function balanceOf(address owner) view returns (uint256)",
-  "function transfer(address to,uint amount) returns (bool)",
-  "function decimals() view returns (uint8)"
+"function balanceOf(address owner) view returns (uint256)",
+"function transfer(address to,uint amount) returns (bool)",
+"function decimals() view returns (uint8)"
 ];
 
 async function connectWallet(){
 
-  try{
+try{
 
-    if(!window.ethereum){
-      alert("Install MetaMask");
-      return;
-    }
+if(!window.ethereum){
 
-    await window.ethereum.request({
-      method:"wallet_switchEthereumChain",
-      params:[{ chainId }]
-    });
+alert("MetaMask Required");
 
-  }catch(switchError){
+return;
 
-    console.log("network switch failed");
-  }
+}
 
-  try{
+const accounts =
+await window.ethereum.request({
+method:"eth_requestAccounts"
+});
 
-    const accounts = await window.ethereum.request({
-      method:"eth_requestAccounts"
-    });
+provider =
+new ethers.BrowserProvider(window.ethereum);
 
-    provider = new ethers.BrowserProvider(window.ethereum);
+signer =
+await provider.getSigner();
 
-    signer = await provider.getSigner();
+userAddress = accounts[0];
 
-    userAddress = accounts[0];
+document.getElementById("walletAddress")
+.innerHTML =
+"Wallet: " +
+userAddress.substring(0,8) +
+"..." +
+userAddress.slice(-6);
 
-    document.getElementById("walletAddress").innerHTML =
-      userAddress.slice(0,6) + "..." + userAddress.slice(-4);
+const network =
+await provider.getNetwork();
 
-    const network = await provider.getNetwork();
+document.getElementById("network")
+.innerHTML =
+"Network: " + network.name;
 
-    document.querySelector(".network").innerHTML =
-      "Connected: " + network.name;
+loadBalance();
 
-    await loadBalance();
+}catch(err){
 
-  }catch(err){
+console.log(err);
 
-    console.log(err);
+alert("Wallet Connection Failed");
 
-    alert("wallet connection failed");
-
-  }
+}
 
 }
 
 async function loadBalance(){
 
-  try{
+try{
 
-    const contract = new ethers.Contract(
-      usdcAddress,
-      usdcABI,
-      provider
-    );
+const contract =
+new ethers.Contract(
+usdcAddress,
+usdcABI,
+provider
+);
 
-    const decimals = await contract.decimals();
+const decimals =
+await contract.decimals();
 
-    const balance = await contract.balanceOf(userAddress);
+const balance =
+await contract.balanceOf(userAddress);
 
-    const formatted =
-      ethers.formatUnits(balance, decimals);
+const formatted =
+ethers.formatUnits(balance,decimals);
 
-    document.getElementById("balance").innerHTML =
-      "Balance: " + Number(formatted).toFixed(2) + " USDC";
+document.getElementById("balance")
+.innerHTML =
+Number(formatted).toFixed(2);
 
-  }catch(err){
+}catch(err){
 
-    console.log(err);
+console.log(err);
 
-    document.getElementById("balance").innerHTML =
-      "Balance unavailable";
+document.getElementById("balance")
+.innerHTML = "Unavailable";
 
-  }
+}
+
+}
+
+function prepareTransaction(){
+
+const recipient =
+document.getElementById("recipient").value;
+
+const amount =
+document.getElementById("amount").value;
+
+if(!recipient || !amount){
+
+alert("Fill All Fields");
+
+return;
+
+}
+
+document.getElementById("confirmBox")
+.style.display = "block";
+
+document.getElementById("confirmDetails")
+.innerHTML =
+`
+Send <b>${amount} USDC</b><br><br>
+To:<br>
+${recipient}
+`;
+
+}
+
+function cancelTransaction(){
+
+document.getElementById("confirmBox")
+.style.display = "none";
 
 }
 
 async function sendUSDC(){
 
-  try{
+try{
 
-    const recipient =
-      document.getElementById("recipient").value;
+const recipient =
+document.getElementById("recipient").value;
 
-    const amount =
-      document.getElementById("amount").value;
+const amount =
+document.getElementById("amount").value;
 
-    document.getElementById("status").innerHTML =
-      "Preparing transaction...";
+document.getElementById("status")
+.innerHTML =
+"Preparing Transaction...";
 
-    const contract = new ethers.Contract(
-      usdcAddress,
-      usdcABI,
-      signer
-    );
+const contract =
+new ethers.Contract(
+usdcAddress,
+usdcABI,
+signer
+);
 
-    const tx = await contract.transfer(
-      recipient,
-      ethers.parseUnits(amount,6)
-    );
+const tx =
+await contract.transfer(
+recipient,
+ethers.parseUnits(amount,6)
+);
 
-    document.getElementById("status").innerHTML =
-      "Transaction pending...";
+document.getElementById("status")
+.innerHTML =
+"Waiting For Confirmation...";
 
-    await tx.wait();
+await tx.wait();
 
-    document.getElementById("status").innerHTML =
-      "Transfer successful";
+document.getElementById("status")
+.innerHTML =
+"Transaction Successful";
 
-    await loadBalance();
+document.getElementById("confirmBox")
+.style.display = "none";
 
-  }catch(err){
+loadBalance();
 
-    console.log(err);
+}catch(err){
 
-    document.getElementById("status").innerHTML =
-      "Transfer failed";
+console.log(err);
 
-  }
+document.getElementById("status")
+.innerHTML =
+"Transaction Failed";
 
 }
 
-window.ethereum?.on("accountsChanged", connectWallet);
+}
 
-window.ethereum?.on("chainChanged", () => {
-  window.location.reload();
-});
+window.ethereum?.on(
+"accountsChanged",
+() => {
+connectWallet();
+}
+);
+
+window.ethereum?.on(
+"chainChanged",
+() => {
+window.location.reload();
+}
+);
 
 </script>
+
+</body>
+</html>
