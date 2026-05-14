@@ -3,133 +3,110 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arc Pro | Settlement Router</title>
+    <title>ArcPro Wallet | v2.0</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        :root { --primary: #3b82f6; --bg: #010309; --surface: #0a0f1d; --text: #f8fafc; --accent: #10b981; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; padding: 0; display: flex; justify-content: center; min-height: 100vh; overflow: hidden; }
-        
-        .iphone-shell { width: 100%; max-width: 420px; height: 100vh; position: relative; background: radial-gradient(circle at top right, #1e293b 0%, #010309 50%); display: flex; flex-direction: column; }
-        
-        /* Premium Header */
-        .header { padding: 30px 20px 10px; display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-weight: 900; font-size: 1.4em; letter-spacing: -1px; background: linear-gradient(to right, #fff, #64748b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .node-chip { background: rgba(16, 185, 129, 0.1); color: var(--accent); border: 1px solid rgba(16, 185, 129, 0.2); padding: 5px 12px; border-radius: 20px; font-size: 0.65em; font-weight: 800; display: flex; align-items: center; gap: 6px; }
-        .pulse { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); }
+        :root { --primary: #3b82f6; --bg: #020617; --surface: #0f172a; --accent: #10b981; }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: white; margin: 0; display: flex; justify-content: center; min-height: 100vh; overflow-x: hidden; }
 
-        /* ArcFlow Style Balance Card */
-        .balance-container { padding: 40px 20px; text-align: center; }
-        .card-glass { background: linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(255,255,255,0.02) 100%); border: 1px solid rgba(255,255,255,0.08); border-radius: 35px; padding: 40px 20px; backdrop-filter: blur(15px); }
-        .label { color: #94a3b8; font-size: 0.75em; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
-        .amount { font-size: 3.5em; font-weight: 800; margin: 10px 0; letter-spacing: -2px; }
-        .wallet-link { background: #111827; border: 1px solid var(--border); padding: 10px 20px; border-radius: 15px; font-size: 0.7em; color: var(--primary); font-family: monospace; display: inline-block; margin-top: 15px; cursor: pointer; }
-
-        /* Active Panel */
-        .action-panel { flex-grow: 1; background: var(--surface); border-radius: 40px 40px 0 0; padding: 30px 25px; border-top: 1px solid var(--border); box-shadow: 0 -20px 40px rgba(0,0,0,0.5); }
-        .title { font-size: 0.9em; font-weight: 800; margin-bottom: 25px; color: var(--primary); letter-spacing: 0.5px; }
+        .app-shell { width: 100%; max-width: 450px; display: flex; flex-direction: column; position: relative; padding-bottom: 100px; }
         
-        .input-box { background: #000; border: 1px solid rgba(255,255,255,0.05); padding: 18px; border-radius: 20px; margin-bottom: 15px; }
-        .input-box label { font-size: 0.6em; color: #475569; font-weight: 800; display: block; margin-bottom: 8px; }
-        input { background: transparent; border: none; color: #fff; width: 100%; outline: none; font-size: 1em; font-weight: 600; }
+        /* ArcFlow Premium Header */
+        .header { padding: 25px; display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(10px); sticky top: 0; z-index: 10; }
+        .logo { font-weight: 900; font-size: 1.2em; letter-spacing: -0.5px; }
+        .node-status { font-size: 0.65em; background: rgba(16, 185, 129, 0.1); color: var(--accent); padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.2); }
+
+        /* Dynamic Balance Card */
+        .hero-section { padding: 30px 20px; text-align: center; }
+        .balance-card { background: linear-gradient(145deg, #1e293b, #0f172a); border-radius: 30px; padding: 35px 20px; border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 20px 50px rgba(0,0,0,0.3); position: relative; overflow: hidden; }
+        .balance-card::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(59,130,246,0.1) 0%, transparent 70%); }
+        .bal-label { font-size: 0.7em; color: #94a3b8; text-transform: uppercase; letter-spacing: 2px; }
+        .bal-amount { font-size: 3.2em; font-weight: 800; margin: 10px 0; letter-spacing: -1.5px; }
         
-        .btn-confirm { background: var(--primary); color: white; border: none; width: 100%; padding: 20px; border-radius: 22px; font-weight: 800; font-size: 1em; cursor: pointer; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3); transition: 0.3s; }
-        .btn-confirm:hover { transform: translateY(-2px); }
+        /* Native Router Panel */
+        .panel { background: var(--surface); margin: 0 20px; border-radius: 24px; padding: 25px; border: 1px solid rgba(255,255,255,0.03); }
+        .title { font-size: 0.8em; font-weight: 700; color: var(--primary); margin-bottom: 20px; text-transform: uppercase; }
+        
+        .field { margin-bottom: 15px; }
+        .field label { font-size: 0.6em; color: #64748b; font-weight: 700; display: block; margin-bottom: 8px; padding-left: 5px; }
+        .input-wrap { background: #020617; border-radius: 16px; padding: 15px; border: 1px solid rgba(255,255,255,0.05); }
+        input { background: transparent; border: none; color: white; width: 100%; outline: none; font-weight: 600; }
 
-        /* Floating Bottom Nav */
-        .bottom-nav { position: absolute; bottom: 20px; left: 20px; right: 20px; height: 75px; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(25px); border-radius: 25px; border: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-around; align-items: center; box-shadow: 0 15px 35px rgba(0,0,0,0.4); }
-        .nav-tab { color: #475569; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; transition: 0.3s; }
-        .nav-tab.active { color: var(--primary); }
-        .nav-tab i { font-size: 1.3em; }
-        .nav-tab span { font-size: 0.6em; font-weight: 800; }
+        .btn-action { background: var(--primary); color: white; border: none; width: 100%; padding: 18px; border-radius: 18px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        
+        /* Glassy Bottom Nav */
+        .bottom-nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; height: 70px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(20px); border-radius: 25px; border: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-around; align-items: center; z-index: 100; }
+        .nav-item { color: #64748b; font-size: 1.2em; display: flex; flex-direction: column; align-items: center; gap: 4px; cursor: pointer; }
+        .nav-item.active { color: var(--primary); }
+        .nav-item span { font-size: 0.5em; font-weight: 800; }
 
-        .hidden { display: none; }
+        .error-overlay { background: rgba(0,0,0,0.9); position: fixed; inset: 0; z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
     </style>
 </head>
 <body>
 
-<div class="iphone-shell">
+<div class="app-shell">
     <div class="header">
         <div class="logo">ARC<span style="font-weight:300;">PRO</span></div>
-        <div class="node-chip"><div class="pulse"></div> NODE-01 ACTIVE</div>
+        <div class="node-status" id="node-id"><i class="fas fa-circle" style="font-size:0.7em;"></i> ARC NODE 01</div>
     </div>
 
-    <div class="balance-container" id="bal-view">
-        <div class="card-glass">
-            <div class="label">Total Liquidity</div>
-            <div class="amount" id="bal">1.00</div>
-            <div class="wallet-link" onclick="connect()" id="wAddr">Connect Arc Wallet</div>
+    <div class="hero-section">
+        <div class="balance-card">
+            <div class="bal-label">Settlement Balance (USDC)</div>
+            <div class="bal-amount" id="balance">0.00</div>
+            <button class="node-status" style="background:transparent; cursor:pointer;" onclick="connect()">Connect Arc Wallet</button>
         </div>
     </div>
 
-    <div class="action-panel">
-        <div id="panel-router">
-            <div class="title">SETTLEMENT ROUTER</div>
-            <div class="input-box">
-                <label>DESTINATION NODE</label>
-                <input type="text" placeholder="0x..." id="target">
-            </div>
-            <div class="input-box">
-                <label>ASSET VOLUME (USDC)</label>
-                <input type="number" placeholder="0.00" id="amt">
-            </div>
-            <button class="btn-confirm" onclick="process()">Route Transaction</button>
+    <div class="panel">
+        <div class="title">Native Settlement Router</div>
+        <div class="field">
+            <label>RECIPIENT NODE ADDRESS</label>
+            <div class="input-wrap"><input type="text" id="target" placeholder="0x..."></div>
         </div>
-
-        <div id="panel-security" class="hidden">
-            <div class="title">NODE SECURITY</div>
-            <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; margin-bottom:12px; border:1px solid rgba(255,255,255,0.05);" onclick="alert('Recovery Phrase Encrypted')">
-                <div style="font-size:0.85em; font-weight:700;">Reveal Seed Phrase</div>
-                <div style="font-size:0.65em; color:var(--primary); margin-top:4px;">Master Access Key</div>
-            </div>
-            <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05);">
-                <div style="font-size:0.85em; font-weight:700;">Biometric Lock</div>
-                <div style="font-size:0.65em; color:var(--primary); margin-top:4px;">Device Auth Active</div>
-            </div>
+        <div class="field">
+            <label>SETTLEMENT AMOUNT</label>
+            <div class="input-wrap"><input type="number" id="amt" placeholder="0.00"></div>
         </div>
+        <button class="btn-action" onclick="route()">Authorize Route</button>
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-tab active" onclick="tab('router')"><i class="fas fa-bolt"></i><span>ROUTER</span></div>
-        <div class="nav-tab" onclick="tab('swap')"><i class="fas fa-repeat"></i><span>SWAP</span></div>
-        <div class="nav-tab" onclick="tab('security')"><i class="fas fa-shield-halved"></i><span>SECURITY</span></div>
-        <div class="nav-tab" onclick="tab('config')"><i class="fas fa-sliders"></i><span>CONFIG</span></div>
+        <div class="nav-item active"><i class="fas fa-paper-plane"></i><span>SEND</span></div>
+        <div class="nav-item"><i class="fas fa-sync"></i><span>SWAP</span></div>
+        <div class="nav-item"><i class="fas fa-shield-alt"></i><span>SECURITY</span></div>
+        <div class="nav-item"><i class="fas fa-cog"></i><span>CONFIG</span></div>
     </div>
 </div>
 
-<script>
-    let provider, account;
-    const USDC = "0x2e1e07505F0376D41865A7E1C8A49c95d97F259B";
-    const ABI = ["function balanceOf(address) view returns (uint256)"];
+<div class="error-overlay" id="err">
+    <h1 style="color:#ef4444; font-size:2.5em;">Fetch Error</h1>
+    <p style="color:#64748b; font-family:monospace; font-size:0.8em;" id="err-addr"></p>
+    <button class="btn-action" style="width:200px;" onclick="location.reload()">Retry Connection</button>
+</div>
 
+<script>
+    let account;
     async function connect() {
-        if (!window.ethereum) return;
-        provider = new ethers.BrowserProvider(window.ethereum);
-        const accounts = await provider.send("eth_requestAccounts", []);
-        account = accounts[0];
-        document.getElementById('wAddr').innerText = account.slice(0,6)+'...'+account.slice(-4);
-        const c = new ethers.Contract(USDC, ABI, provider);
-        try {
-            const b = await c.balanceOf(account);
-            document.getElementById('bal').innerText = ethers.formatUnits(b, 6);
-        } catch(e) { document.getElementById('bal').innerText = "1.00"; }
+        if (!window.ethereum) return alert("Install Metamask");
+        const p = new ethers.BrowserProvider(window.ethereum);
+        const accts = await p.send("eth_requestAccounts", []);
+        account = accts[0];
+        document.getElementById('balance').innerText = "1.00";
+        document.getElementById('node-id').innerText = "NODE ACTIVE";
     }
 
-    function tab(name) {
-        document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-        
-        if(name === 'security') {
-            document.getElementById('panel-router').classList.add('hidden');
-            document.getElementById('panel-security').classList.remove('hidden');
+    function route() {
+        if(!account) {
+            document.getElementById('err').style.display = 'flex';
+            document.getElementById('err-addr').innerText = "UNAUTHORIZED_NODE_ACCESS_0x1C24...";
         } else {
-            document.getElementById('panel-router').classList.remove('hidden');
-            document.getElementById('panel-security').classList.add('hidden');
+            alert("Settlement Initialized on Arc Network");
         }
     }
-
-    function process() { alert("Initiating Arc Settlement..."); }
-    if(window.ethereum && window.ethereum.selectedAddress) connect();
 </script>
 </body>
 </html>
