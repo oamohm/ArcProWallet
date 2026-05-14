@@ -14,38 +14,27 @@
     .logo { font-size:22px; font-weight:600; }
     .card { background:#1a1a24; margin:16px; border-radius:16px; padding:20px; }
     button { background:#3b82f6; color:white; border:none; padding:14px; border-radius:12px; width:100%; font-weight:600; cursor:pointer; font-size:16px; }
-    button:disabled { background:#334155; }
     input, select { width:100%; background:#22222f; border:none; padding:14px; border-radius:12px; color:white; margin:8px 0; font-size:16px; }
     .quick { display:flex; gap:8px; margin:12px 0; }
     .quick button { background:#22222f; flex:1; padding:12px; border-radius:12px; font-size:15px; }
-    .status { color:#eab308; }
-    .connected { color:#22c55e !important; }
-    .balance { font-size:28px; font-weight:600; margin:8px 0; }
-    .tx { font-size:13px; padding:12px; background:#22222f; border-radius:8px; margin:8px 0; word-break:break-all; }
-    #musicToggle { position:fixed; bottom:20px; right:20px; background:#222; padding:10px 14px; border-radius:50%; cursor:pointer; z-index:100; font-size:20px; }
+    .tx { padding:12px; background:#22222f; border-radius:8px; margin:8px 0; }
   </style>
 </head>
 <body>
   <div class="container">
-
     <header>
       <div class="logo">ArcPro</div>
       <button onclick="connectWallet()" id="connectBtn">Connect</button>
     </header>
 
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <strong>ARC TESTNET</strong><br>
-          <span id="balanceDisplay" class="balance">0.00 USDC</span>
-        </div>
-        <span id="status" class="status">Idle</span>
-      </div>
+      <strong>ARC TESTNET</strong><br>
+      <span id="balanceDisplay" style="font-size:28px;font-weight:600;">0.00 USDC</span>
     </div>
 
     <div class="card">
-      <strong style="display:flex;align-items:center;gap:8px;">↗ SEND ASSET</strong>
-      <select id="asset"><option>USDC (Stablecoin)</option></select>
+      <strong>↗ SEND ASSET</strong>
+      <select><option>USDC (Stablecoin)</option></select>
       <input type="text" id="recipient" placeholder="Recipient address (0x...)" />
       <div>Quick Amount:</div>
       <div class="quick">
@@ -53,156 +42,58 @@
         <button onclick="setAmount(50)">50</button>
         <button onclick="setAmount(100)">100</button>
       </div>
-      <input type="number" id="amount" value="0.00" step="0.01" />
+      <input type="number" id="amount" value="1" step="0.01" />
       <button onclick="sendUSDC()">Confirm Send</button>
     </div>
 
     <div class="card">
       <strong>Recent Transactions</strong>
-      <div id="txHistory" style="margin-top:12px; max-height:320px; overflow-y:auto;"></div>
-    </div>
-
-    <div class="card">
-      <strong>ECOSYSTEM & SOCIALS</strong>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px;">
-        <div onclick="window.open('https://arc.network')" style="background:#22222f;padding:12px;border-radius:12px;text-align:center;cursor:pointer;">Website</div>
-        <div onclick="window.open('https://docs.arc.network')" style="background:#22222f;padding:12px;border-radius:12px;text-align:center;cursor:pointer;">Docs</div>
-        <div onclick="window.open('https://arc.network/house')" style="background:#22222f;padding:12px;border-radius:12px;text-align:center;cursor:pointer;">House</div>
-        <div onclick="window.open('https://x.com/Bhupendrxsingh')" style="background:#22222f;padding:12px;border-radius:12px;text-align:center;cursor:pointer;">X</div>
-        <div onclick="window.open('https://discord.gg/arcnetwork')" style="background:#22222f;padding:12px;border-radius:12px;text-align:center;cursor:pointer;">Discord</div>
-      </div>
-    </div>
-
-    <div style="text-align:center;padding:20px;color:#666;font-size:13px;">
-      Built for Arc Network • Testnet
+      <div id="txHistory"></div>
     </div>
   </div>
 
-  <div id="musicToggle" onclick="toggleMusic()">♪</div>
-  <audio id="bgMusic" loop><source src="https://assets.mixkit.co/sfx/preview/123/123.wav" type="audio/wav"></audio>
-
   <script>
-    let provider, signer, userAddress;
-    let txHistory = [];
-
-    const ARC_TESTNET = {
-      chainId: "0x4cef52",
-      chainName: "Arc Testnet",
-      nativeCurrency: { name: "USDC", symbol: "USDC", decimals: 18 },
-      rpcUrls: ["https://rpc.testnet.arc.network"],
-      blockExplorerUrls: ["https://testnet.arcscan.app"]
-    };
+    let signer, userAddress, provider;
 
     async function connectWallet() {
-      const btn = document.getElementById("connectBtn");
-      btn.disabled = true; btn.innerText = "Connecting...";
-
-      try {
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        userAddress = accounts[0];
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        signer = provider.getSigner();
-
-        const currentChain = await window.ethereum.request({ method: 'eth_chainId' });
-        if (currentChain !== ARC_TESTNET.chainId) {
-          try {
-            await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: ARC_TESTNET.chainId }] });
-          } catch (e) {
-            if (e.code === 4902) await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [ARC_TESTNET] });
-          }
-        }
-
-        btn.innerText = userAddress.slice(0,6) + "..." + userAddress.slice(-4);
-        btn.style.backgroundColor = "#22c55e";
-        document.getElementById("status").innerText = "Connected";
-        document.getElementById("status").classList.add("connected");
-
-        getBalance();
-        addTxToHistory("Wallet Connected", "0", userAddress);
-      } catch (error) {
-        alert("Connect failed: " + error.message);
-        resetBtn();
-      }
-    }
-
-    function resetBtn() {
-      const btn = document.getElementById("connectBtn");
-      btn.disabled = false; btn.innerText = "Connect"; btn.style.backgroundColor = "";
+      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      userAddress = accounts[0];
+      provider = new ethers.providers.Web3Provider(window.ethereum);
+      signer = provider.getSigner();
+      document.getElementById("connectBtn").innerText = userAddress.slice(0,6)+".."+userAddress.slice(-4);
+      getBalance();
     }
 
     async function getBalance() {
-      if (!provider || !userAddress) return;
-      try {
-        const bal = await provider.getBalance(userAddress);
-        const usdcBal = (parseFloat(bal) / 1e18).toFixed(4);
-        document.getElementById("balanceDisplay").innerText = usdcBal + " USDC";
-      } catch(e) {}
+      const bal = await provider.getBalance(userAddress);
+      document.getElementById("balanceDisplay").innerText = (bal / 1e18).toFixed(4) + " USDC";
     }
 
-    function setAmount(val) { document.getElementById("amount").value = val; }
+    function setAmount(v) { document.getElementById("amount").value = v; }
 
     async function sendUSDC() {
-      if (!signer) { alert("Pehle Connect karo"); return; }
       const to = document.getElementById("recipient").value.trim();
       const amt = document.getElementById("amount").value;
 
-      if (!ethers.utils.isAddress(to)) { alert("Sahih recipient address daalo"); return; }
-      if (parseFloat(amt) <= 0) { alert("Amount daalo"); return; }
-
       try {
-        // Gas estimate + explicit params
-        const gasEstimate = await provider.estimateGas({
-          from: userAddress,
+        const tx = await signer.sendTransaction({
           to: to,
           value: ethers.utils.parseUnits(amt, 18)
         });
-
-        const tx = await signer.sendTransaction({
-          to: to,
-          value: ethers.utils.parseUnits(amt, 18),
-          gasLimit: gasEstimate.mul(12).div(10)  // 20% extra buffer
-        });
-
-        addTxToHistory(tx.hash, amt, to);
-        alert(`✅ Success!\nHash: ${tx.hash}\n\nExplorer: https://testnet.arcscan.app/tx/${tx.hash}`);
-        setTimeout(getBalance, 4000);
-      } catch (e) {
-        console.error(e);
-        alert("Send failed: " + (e.message || "Insufficient balance ya gas issue. Faucet se aur le lo."));
+        alert("✅ Tx Sent! Hash: " + tx.hash);
+        addTx(tx.hash, amt, to);
+        setTimeout(getBalance, 3000);
+      } catch(e) {
+        alert("Error: " + e.message);
       }
     }
 
-    function addTxToHistory(hash, amount, to) {
-      const tx = {
-        hash: hash.length > 20 ? hash.slice(0,10) + "..." : hash,
-        amount: amount,
-        to: to.slice(0,8) + "...",
-        time: new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})
-      };
-      txHistory.unshift(tx);
-      if (txHistory.length > 6) txHistory.pop();
-      renderTxHistory();
+    function addTx(hash, amt, to) {
+      const div = document.createElement("div");
+      div.className = "tx";
+      div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> • ${amt} USDC → ${to.slice(0,8)}...`;
+      document.getElementById("txHistory").prepend(div);
     }
-
-    function renderTxHistory() {
-      const container = document.getElementById("txHistory");
-      container.innerHTML = txHistory.map(tx => `
-        <div class="tx">
-          <div><strong>${tx.time}</strong> • ${tx.amount} USDC</div>
-          <div style="color:#888;">→ ${tx.to}</div>
-          ${tx.hash.startsWith('0x') ? `<a href="https://testnet.arcscan.app/tx/${tx.hash}" target="_blank" style="color:#60a5fa;">View Explorer</a>` : ''}
-        </div>
-      `).join('');
-    }
-
-    function toggleMusic() {
-      const audio = document.getElementById("bgMusic");
-      if (audio.paused) { audio.play(); document.getElementById("musicToggle").innerText = "⏸"; }
-      else { audio.pause(); document.getElementById("musicToggle").innerText = "♪"; }
-    }
-
-    window.ethereum?.on('accountsChanged', () => window.location.reload());
-    window.ethereum?.on('chainChanged', () => window.location.reload());
   </script>
 </body>
 </html>
