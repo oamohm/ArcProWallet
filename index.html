@@ -3,118 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arc Pro Wallet | Advanced Node</title>
+    <title>Arc Smart Wallet | Social & Secure</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <style>
-        :root { --primary: #3b82f6; --bg: #05070a; --card: rgba(22, 30, 45, 0.8); --text: #f1f5f9; --accent: #10b981; }
-        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
-        .app-container { width: 100%; max-width: 420px; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; }
-        .card { background: var(--card); border-radius: 24px; padding: 20px; border: 1px solid rgba(255,255,255,0.08); margin-bottom: 12px; backdrop-filter: blur(10px); }
-        .balance-value { font-size: 2.8em; font-weight: 800; text-align: center; margin: 10px 0; }
-        .tab-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
-        .tab-btn { background: #1e293b; color: #94a3b8; border: none; padding: 10px 2px; border-radius: 12px; font-size: 0.65em; cursor: pointer; font-weight: bold; }
+        :root { --primary: #3b82f6; --bg: #05070a; --card: rgba(22, 30, 45, 0.85); --text: #f1f5f9; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
+        .app-container { width: 100%; max-width: 400px; }
+        .card { background: var(--card); border-radius: 28px; padding: 24px; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); margin-bottom: 15px; }
+        
+        /* Auth Styles */
+        .login-btn { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid #334155; background: white; color: black; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; }
+        .gmail-icon { width: 18px; height: 18px; }
+        
+        .tab-bar { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+        .tab-btn { background: #1e293b; color: #94a3b8; border: none; padding: 10px; border-radius: 12px; font-size: 0.75em; cursor: pointer; }
         .tab-btn.active { background: var(--primary); color: white; }
+
+        .input-group { background: #0f172a; border-radius: 16px; padding: 15px; border: 1px solid #1e293b; margin-bottom: 15px; }
+        input { background: transparent; border: none; color: white; width: 100%; outline: none; font-size: 1em; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 18px; width: 100%; font-weight: 700; cursor: pointer; }
         
-        /* New Menu Styles */
-        .menu-list { display: flex; flex-direction: column; gap: 10px; }
-        .menu-item { display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255,255,255,0.03); border-radius: 14px; cursor: pointer; transition: 0.2s; border: 1px solid transparent; }
-        .menu-item:hover { background: rgba(255,255,255,0.07); border-color: var(--primary); }
-        .menu-text { font-size: 0.85em; font-weight: 500; }
-        .menu-icon { opacity: 0.5; font-size: 0.9em; }
-        
-        .btn-main { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 16px; width: 100%; font-weight: 700; cursor: pointer; margin-top: 10px; }
-        .status-pill { font-size: 0.65em; padding: 4px 12px; border-radius: 20px; background: rgba(16,185,129,0.1); color: var(--accent); border: 1px solid rgba(16,185,129,0.2); }
+        /* Verification Modal */
+        #verifyModal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
     </style>
 </head>
 <body>
 
+<div id="verifyModal">
+    <div class="card" style="width: 100%; text-align: center;">
+        <h3 style="margin-top:0">Verify Transaction</h3>
+        <p style="font-size:0.8em; opacity:0.7">An 2FA code has been sent to your registered Email/SMS</p>
+        <div class="input-group">
+            <input type="text" id="otpCode" placeholder="Enter 6-digit code" style="text-align:center; letter-spacing: 5px;">
+        </div>
+        <button class="btn-main" onclick="finalizeTx()">Confirm Settlement</button>
+    </div>
+</div>
+
 <div class="app-container">
-    <div class="header">
-        <div style="font-weight:900; font-size:1.2em;">ARC<span style="color:var(--primary)">PRO</span></div>
-        <div id="connStatus" class="status-pill">Connected</div>
-    </div>
-
-    <div class="card" style="text-align:center">
-        <div style="color:#64748b; font-size:0.7em; font-weight:700">TOTAL ASSETS (USDC)</div>
-        <div class="balance-value" id="bal">1.00</div>
-        <div id="walletAddr" style="font-size:0.6em; opacity:0.4; font-family:monospace">0x...7ca67f</div>
-    </div>
-
-    <div class="tab-bar">
-        <button class="tab-btn active" onclick="showSection('wallet')">WALLET</button>
-        <button class="tab-btn" onclick="showSection('swap')">SWAP</button>
-        <button class="tab-btn" onclick="showSection('security')">SECURITY</button>
-        <button class="tab-btn" onclick="showSection('settings')">SETTINGS</button>
-    </div>
-
-    <div id="section-wallet" class="section">
-        <div class="card">
-            <h4 style="margin:0 0 15px 0; font-size:0.85em; color:var(--primary)">NATIVE ROUTE</h4>
-            <input type="text" placeholder="Recipient Address" style="width:100%; padding:14px; margin-bottom:10px; border-radius:12px; border:1px solid #334155; background:#0f172a; color:white; box-sizing:border-box;">
-            <input type="number" placeholder="Amount" style="width:100%; padding:14px; border-radius:12px; border:1px solid #334155; background:#0f172a; color:white; box-sizing:border-box;">
-            <button class="btn-main">Send Settlement</button>
+    <div id="authScreen">
+        <div class="card" style="text-align: center;">
+            <h2 style="margin-top:0">Arc Pro</h2>
+            <p style="font-size:0.85em; opacity:0.6; margin-bottom:25px;">The intelligent wallet for the agentic economy.</p>
+            <button class="login-btn" onclick="mockLogin()">
+                <img src="https://www.gstatic.com/images/branding/product/1x/googleg_48dp.png" class="gmail-icon">
+                Continue with Google
+            </button>
+            <div style="font-size:0.7em; margin: 15px 0; opacity:0.4;">OR</div>
+            <button class="login-btn" style="background:#1e293b; color:white; border:none;" onclick="mockLogin()">
+                Access with Seed Phrase
+            </button>
         </div>
     </div>
 
-    <div id="section-security" class="section" style="display:none">
+    <div id="mainApp" style="display:none;">
+        <div class="header" style="display:flex; justify-content:space-between; margin-bottom:20px; align-items:center;">
+            <span style="font-weight:900;">ARC<span style="color:var(--primary)">PRO</span></span>
+            <div style="background:rgba(16,185,129,0.1); color:#10b981; font-size:0.6em; padding:5px 12px; border-radius:20px;">Authenticated</div>
+        </div>
+
+        <div class="card" style="text-align:center">
+            <div style="font-size:0.7em; opacity:0.5;">VAULT BALANCE</div>
+            <div style="font-size:3em; font-weight:800; margin:10px 0;">1.00 <span style="font-size:0.4em; opacity:0.5;">USDC</span></div>
+        </div>
+
+        <div class="tab-bar">
+            <button class="tab-btn active">Transfer</button>
+            <button class="tab-btn">Security</button>
+            <button class="tab-btn">History</button>
+        </div>
+
         <div class="card">
-            <h4 style="margin:0 0 15px 0; font-size:0.85em; color:var(--primary)">SECURITY & PRIVACY</h4>
-            <div class="menu-list">
-                <div class="menu-item" onclick="alert('Recovery Phrase: [Hidden for Security]')">
-                    <span class="menu-text">Reveal Recovery Phrase</span>
-                    <span class="menu-icon">→</span>
-                </div>
-                <div class="menu-item">
-                    <span class="menu-text">Auto-Lock Timer</span>
-                    <span class="menu-icon">5 Min</span>
-                </div>
-                <div class="menu-item">
-                    <span class="menu-text">Biometric Unlock</span>
-                    <span class="menu-icon">Enabled</span>
-                </div>
+            <div class="input-group">
+                <input type="text" id="target" placeholder="Recipient Address">
             </div>
-        </div>
-    </div>
-
-    <div id="section-settings" class="section" style="display:none">
-        <div class="card">
-            <h4 style="margin:0 0 15px 0; font-size:0.85em; color:var(--primary)">ADVANCED CONFIG</h4>
-            <div class="menu-list">
-                <div class="menu-item">
-                    <span class="menu-text">Network (RPC)</span>
-                    <span class="menu-icon">Arc Testnet</span>
-                </div>
-                <div class="menu-item">
-                    <span class="menu-text">Default Gas Limit</span>
-                    <span class="menu-icon">Auto</span>
-                </div>
-                <div class="menu-item" style="color:#ef4444">
-                    <span class="menu-text">Reset Wallet</span>
-                    <span class="menu-icon">!</span>
-                </div>
+            <div class="input-group">
+                <input type="number" id="amt" placeholder="Amount">
             </div>
+            <button class="btn-main" onclick="startTx()">Send (Requires 2FA)</button>
         </div>
     </div>
-
 </div>
 
 <script>
-    function showSection(name) {
-        // Hide all sections
-        document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
-        // Show selected
-        document.getElementById('section-' + name).style.display = 'block';
-        // Update tabs
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        event.target.classList.add('active');
+    function mockLogin() {
+        document.getElementById('authScreen').style.display = 'none';
+        document.getElementById('mainApp').style.display = 'block';
     }
 
-    // Auto-connect simulation
-    window.onload = () => {
-        if(window.ethereum) {
-            console.log("Ethers engine ready for Arc coordination");
-        }
+    function startTx() {
+        const amt = document.getElementById('amt').value;
+        if(!amt) return alert("Enter amount");
+        document.getElementById('verifyModal').style.display = 'flex';
+    }
+
+    function finalizeTx() {
+        const otp = document.getElementById('otpCode').value;
+        if(otp.length < 4) return alert("Enter valid OTP");
+        
+        document.getElementById('verifyModal').innerHTML = `
+            <div class="card" style="text-align:center">
+                <div style="color:#10b981; font-size:3em;">✓</div>
+                <h3>Transaction Approved</h3>
+                <p style="font-size:0.8em; opacity:0.7">Broadcasted to Arc Node</p>
+                <button class="btn-main" onclick="location.reload()">Back to Wallet</button>
+            </div>
+        `;
     }
 </script>
 
