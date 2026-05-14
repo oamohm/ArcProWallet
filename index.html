@@ -9,53 +9,40 @@
         :root { --primary: #3b82f6; --bg: #05070a; --card: rgba(22, 30, 45, 0.7); --text: #f1f5f9; --accent: #10b981; --warning: #f59e0b; }
         body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
         .app-container { width: 100%; max-width: 450px; }
-        
         .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 0; }
         .logo { font-weight: 900; letter-spacing: -1px; font-size: 1.4em; }
-        
         .card { background: var(--card); border-radius: 24px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; backdrop-filter: blur(20px); }
         .balance-label { color: #94a3b8; font-size: 0.75em; text-transform: uppercase; text-align: center; }
         .balance-value { font-size: 3em; font-weight: 800; text-align: center; margin: 10px 0; background: linear-gradient(to bottom, #fff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .network-chip { background: #1e293b; border: 1px solid #334155; padding: 6px 12px; border-radius: 20px; font-size: 0.7em; }
-        
         .tab-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 15px; }
         .tab-btn { background: rgba(255,255,255,0.05); color: #94a3b8; border: none; padding: 12px 5px; border-radius: 12px; font-size: 0.75em; cursor: pointer; transition: 0.3s; }
         .tab-btn.active { background: var(--primary); color: white; font-weight: bold; }
-        
         input, select { width: 100%; padding: 16px; margin: 8px 0; border-radius: 12px; border: 1px solid #1f2937; background: #000; color: white; box-sizing: border-box; font-size: 0.9em; outline: none; }
         .btn-main { background: var(--primary); color: white; border: none; padding: 18px; border-radius: 16px; width: 100%; font-weight: 700; cursor: pointer; font-size: 1em; transition: 0.3s; }
-        .btn-main:disabled { opacity: 0.5; cursor: not-allowed; }
-
         .ledger-box { max-height: 200px; overflow-y: auto; font-size: 0.8em; }
         .history-item { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
-
         .eco-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
         .eco-item { background: #111827; border: 1px solid #1f2937; padding: 12px; border-radius: 12px; text-align: center; text-decoration: none; color: #94a3b8; font-size: 0.7em; }
     </style>
 </head>
 <body>
-
 <div class="app-container">
     <div class="header">
         <div class="logo">ARC<span style="color:var(--primary); font-weight:300;">PRO</span></div>
         <button class="btn-main" id="connectBtn" onclick="init()" style="width:auto; padding: 8px 16px; font-size:0.8em;">Connect</button>
     </div>
-
     <div class="card" style="text-align: center;">
         <div id="netStatus" style="font-size:0.7em; color:var(--warning); margin-bottom:8px;">● Check Network</div>
         <div class="balance-label">Total Portfolio (USDC)</div>
         <div class="balance-value" id="bal">0.00</div>
         <div id="addr" style="font-family:monospace; font-size:0.7em; opacity:0.6;">Wallet Not Linked</div>
     </div>
-
     <div class="tab-bar">
         <button class="tab-btn active" onclick="setTab('send')">Send</button>
         <button class="tab-btn" onclick="setTab('swap')">Swap</button>
         <button class="tab-btn" onclick="setTab('pool')">Pools</button>
         <button class="tab-btn" onclick="setTab('bridge')">Bridge</button>
     </div>
-
     <div class="card">
         <h4 id="panelTitle" style="margin:0 0 15px 0; font-size:0.9em; color:var(--primary);">NATIVE ROUTER</h4>
         <div id="dynamicFields">
@@ -64,57 +51,44 @@
         </div>
         <button class="btn-main" id="mainAction" onclick="handleAction()">Initialize Settlement</button>
     </div>
-
     <div class="card">
         <div style="font-size:0.7em; opacity:0.5; margin-bottom:10px;">LEDGER RECORDS</div>
         <div id="ledger" class="ledger-box">
             <div style="text-align:center; padding:20px; opacity:0.3;">Waiting for coordination...</div>
         </div>
     </div>
-
     <div class="eco-grid">
         <a href="https://community.arc.network" target="_blank" class="eco-item">Docs</a>
         <a href="#" class="eco-item">Circle</a>
         <a href="https://community.arc.network/home/resources" target="_blank" class="eco-item">House</a>
     </div>
 </div>
-
 <script>
     let provider, signer, address, currentTab = 'send';
-    const ARC_CHAIN_ID = "0x2bc7"; // Example Arc Testnet ID
+    const ARC_CHAIN_ID = "0x2bc7"; 
     const USDC_ADDR = "0x..."; // Paste actual Arc USDC Contract Address here
     const ABI = ["function transfer(address to, uint256 amount) returns (bool)", "function balanceOf(address) view returns (uint256)"];
-
     async function init() {
         if (!window.ethereum) return alert("Install MetaMask");
         provider = new ethers.BrowserProvider(window.ethereum);
-        
         try {
             const accounts = await provider.send("eth_requestAccounts", []);
             address = accounts[0];
             signer = await provider.getSigner();
-            
-            // Network Check
             const { chainId } = await provider.getNetwork();
             if ("0x" + chainId.toString(16) !== ARC_CHAIN_ID) {
                 try {
-                    await window.ethereum.request({
-                        method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: ARC_CHAIN_ID }],
-                    });
+                    await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: ARC_CHAIN_ID }] });
                 } catch (e) { alert("Please switch to Arc Testnet"); }
             }
-
             document.getElementById('connectBtn').innerText = "Linked";
             document.getElementById('netStatus').innerText = "● Arc Node Active";
             document.getElementById('netStatus').style.color = "#10b981";
             document.getElementById('addr').innerText = address.slice(0,6) + "..." + address.slice(-4);
-            
             syncBalance();
             renderLogs();
         } catch (e) { console.error(e); }
     }
-
     async function syncBalance() {
         if (!address) return;
         try {
@@ -123,15 +97,12 @@
             document.getElementById('bal').innerText = ethers.formatUnits(b, 6);
         } catch (e) { document.getElementById('bal').innerText = "0.00"; }
     }
-
     function setTab(tab) {
         currentTab = tab;
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         event.target.classList.add('active');
-        
         const titles = { send: 'NATIVE ROUTER', swap: 'LIQUIDITY SWAP', pool: 'ASSET POOLS', bridge: 'GATEWAY BRIDGE' };
         document.getElementById('panelTitle').innerText = titles[tab];
-        
         const fields = document.getElementById('dynamicFields');
         if (tab === 'swap') {
             fields.innerHTML = '<select id="tokenIn"><option>USDC</option></select><input type="number" id="amt" placeholder="Amount to Swap">';
@@ -141,42 +112,28 @@
             fields.innerHTML = '<input type="text" id="target" placeholder="Recipient / Bridge Address"><input type="number" id="amt" placeholder="Amount">';
         }
     }
-
     async function handleAction() {
         if (!signer) return alert("Connect Wallet First");
         const btn = document.getElementById('mainAction');
         const val = document.getElementById('amt').value;
         const target = document.getElementById('target')?.value || "Contract Interaction";
-
         try {
-            btn.disabled = true;
-            btn.innerText = "Coordinating...";
-
-            // Functional Transaction Logic
+            btn.disabled = true; btn.innerText = "Coordinating...";
             const contract = new ethers.Contract(USDC_ADDR, ABI, signer);
             const tx = await contract.transfer(target === "Contract Interaction" ? USDC_ADDR : target, ethers.parseUnits(val, 6));
-            
             addLog(currentTab, val, tx.hash);
             await tx.wait();
-            
             alert(`${currentTab.toUpperCase()} Finalized!`);
             syncBalance();
-        } catch (e) {
-            console.error(e);
-            alert("Transaction Failed - Check Console");
-        } finally {
-            btn.disabled = false;
-            btn.innerText = "Initialize Settlement";
-        }
+        } catch (e) { console.error(e); alert("Transaction Failed"); }
+        finally { btn.disabled = false; btn.innerText = "Initialize Settlement"; }
     }
-
     function addLog(type, amt, hash) {
         let logs = JSON.parse(localStorage.getItem('arc_logs') || '[]');
         logs.unshift({ type: type.toUpperCase(), val: amt, id: hash.slice(0,10), time: new Date().toLocaleTimeString() });
         localStorage.setItem('arc_logs', JSON.stringify(logs.slice(0, 5)));
         renderLogs();
     }
-
     function renderLogs() {
         const box = document.getElementById('ledger');
         const logs = JSON.parse(localStorage.getItem('arc_logs') || '[]');
@@ -189,6 +146,5 @@
         `).join('');
     }
 </script>
-
 </body>
 </html>
