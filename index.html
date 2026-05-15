@@ -4,7 +4,9 @@
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
 <title>ArcPro Wallet</title>
 
@@ -12,79 +14,118 @@
 
 <style>
 
-body{
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+*{
 margin:0;
-font-family:Arial;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
 background:#050816;
+font-family:'Inter',sans-serif;
 color:white;
 }
 
 .container{
 max-width:480px;
 margin:auto;
+padding-bottom:40px;
+}
+
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
 padding:20px;
+}
+
+.logo{
+font-size:30px;
+font-weight:700;
+}
+
+.connectBtn{
+background:#3154ff;
+padding:14px 18px;
+border:none;
+border-radius:16px;
+color:white;
+font-weight:600;
+cursor:pointer;
 }
 
 .card{
 background:#0d1324;
+margin:16px;
 padding:20px;
-border-radius:20px;
-margin-top:20px;
+border-radius:24px;
 border:1px solid #1f2d52;
+box-shadow:0 0 25px rgba(0,0,0,0.25);
 }
 
-.logo{
-font-size:32px;
-font-weight:bold;
+.label{
+font-size:13px;
+color:#8ea2ff;
+margin-bottom:8px;
 }
 
-button{
-width:100%;
-padding:16px;
-border:none;
-border-radius:16px;
-background:#3154ff;
-color:white;
-font-size:16px;
+.balance{
+font-size:38px;
+font-weight:700;
+margin-top:5px;
+}
+
+.network{
+color:#22c55e;
+font-size:14px;
+font-weight:600;
+}
+
+.wallet{
 margin-top:14px;
-cursor:pointer;
+font-size:13px;
+word-break:break-word;
+color:#8ea2ff;
 }
 
 input{
 width:100%;
+margin-top:14px;
 padding:16px;
 border:none;
+outline:none;
 border-radius:16px;
 background:#151d33;
 color:white;
-margin-top:12px;
 font-size:15px;
-box-sizing:border-box;
 }
 
-.balance{
-font-size:40px;
-font-weight:bold;
-margin-top:8px;
-}
-
-.small{
-font-size:13px;
-color:#8ea2ff;
-margin-top:10px;
-word-break:break-word;
+.sendBtn{
+width:100%;
+margin-top:18px;
+padding:16px;
+border:none;
+border-radius:16px;
+background:#3b82f6;
+color:white;
+font-size:16px;
+font-weight:600;
+cursor:pointer;
 }
 
 .status{
-margin-top:15px;
+margin-top:16px;
 font-size:14px;
 color:#8ea2ff;
+word-break:break-word;
 }
 
 .tx{
 background:#151d33;
 padding:14px;
-border-radius:14px;
+border-radius:16px;
 margin-top:12px;
 font-size:14px;
 }
@@ -101,6 +142,13 @@ color:#ef4444;
 color:#facc15;
 }
 
+.footer{
+text-align:center;
+padding:20px;
+font-size:13px;
+color:#6d7ca8;
+}
+
 </style>
 
 </head>
@@ -109,9 +157,20 @@ color:#facc15;
 
 <div class="container">
 
+<header>
+
 <div class="logo">
 ArcPro
 </div>
+
+<button
+class="connectBtn"
+id="connectBtn"
+onclick="connectWallet()">
+Connect Wallet
+</button>
+
+</header>
 
 <div class="card">
 
@@ -119,52 +178,53 @@ ArcPro
 
 <div>
 
-<div style="font-size:13px;color:#8ea2ff;">
-ARC TESTNET
+<div class="label">
+WALLET BALANCE
 </div>
 
 <div
 class="balance"
 id="balanceDisplay">
-0.00 USDC
+0.00 ETH
 </div>
 
 </div>
 
-<div id="networkStatus">
+<div
+class="network"
+id="networkStatus">
 Disconnected
 </div>
 
 </div>
 
 <div
-class="small"
+class="wallet"
 id="walletAddress">
 Wallet not connected
 </div>
-
-<button onclick="connectWallet()">
-Connect Wallet
-</button>
 
 </div>
 
 <div class="card">
 
-<h3>
-Send USDC
-</h3>
+<div style="font-size:18px;font-weight:600;">
+↗ Send Transaction
+</div>
 
 <input
 id="recipient"
-placeholder="Recipient Address">
+placeholder="Recipient 0x..." />
 
 <input
 id="amount"
+placeholder="Amount"
 type="number"
-placeholder="Amount">
+step="0.0001" />
 
-<button onclick="sendUSDC()">
+<button
+class="sendBtn"
+onclick="sendTransaction()">
 Confirm Send
 </button>
 
@@ -178,12 +238,16 @@ Waiting for wallet connection
 
 <div class="card">
 
-<h3>
+<div style="font-size:18px;font-weight:600;">
 Recent Transactions
-</h3>
+</div>
 
 <div id="txHistory"></div>
 
+</div>
+
+<div class="footer">
+Built by @Bhupendrxsingh • Less noise, more signal
 </div>
 
 </div>
@@ -194,40 +258,20 @@ let provider;
 let signer;
 let userAddress;
 
-/*
-TEMP DEMO CONTRACT
-
-Real Arc USDC contract milne ke baad
-yahan replace karna
-*/
-
-const USDC_ADDRESS =
-"0xaf88d065e77c8cc2239327c5edb3a432268e5831";
-
-const USDC_ABI = [
-
-"function balanceOf(address owner) view returns (uint256)",
-
-"function transfer(address to,uint amount) returns (bool)",
-
-"function decimals() view returns (uint8)"
-
-];
-
 async function connectWallet(){
 
 try{
 
 if(!window.ethereum){
 
-alert("Install MetaMask or Brave");
+alert("Install MetaMask or Brave Wallet");
 
 return;
 
 }
 
-await ethereum.request({
-method:"eth_requestAccounts"
+await window.ethereum.request({
+method:'eth_requestAccounts'
 });
 
 provider =
@@ -241,6 +285,21 @@ provider.getSigner();
 userAddress =
 await signer.getAddress();
 
+const network =
+await provider.getNetwork();
+
+document.getElementById(
+"connectBtn"
+).innerHTML =
+userAddress.slice(0,6) +
+"..." +
+userAddress.slice(-4);
+
+document.getElementById(
+"connectBtn"
+).style.background =
+"#22c55e";
+
 document.getElementById(
 "walletAddress"
 ).innerHTML =
@@ -249,7 +308,7 @@ userAddress;
 document.getElementById(
 "networkStatus"
 ).innerHTML =
-"Connected";
+network.name;
 
 loadBalance();
 
@@ -266,10 +325,6 @@ alert("Wallet Connection Failed");
 async function loadBalance(){
 
 try{
-
-/*
-SAFE FALLBACK
-*/
 
 const balanceWei =
 await provider.getBalance(
@@ -294,13 +349,13 @@ console.log(err);
 document.getElementById(
 "balanceDisplay"
 ).innerHTML =
-"0.00";
+"0.0000 ETH";
 
 }
 
 }
 
-async function sendUSDC(){
+async function sendTransaction(){
 
 try{
 
@@ -316,7 +371,7 @@ document.getElementById(
 
 if(!ethers.utils.isAddress(recipient)){
 
-alert("Invalid Address");
+alert("Invalid Wallet Address");
 
 return;
 
@@ -333,7 +388,7 @@ return;
 document.getElementById(
 "status"
 ).innerHTML =
-"Waiting for confirmation...";
+"Waiting For Wallet Confirmation...";
 
 const tx =
 await signer.sendTransaction({
@@ -416,6 +471,10 @@ div.innerHTML =
 <div style="margin-top:6px;">
 ${recipient.slice(0,10)}...
 </div>
+
+<div style="margin-top:6px;font-size:12px;color:#8ea2ff;">
+${hash.slice(0,18)}...
+</div>
 `;
 
 }else if(status === "pending"){
@@ -424,6 +483,10 @@ div.innerHTML =
 `
 <div class="pending">
 ⏳ Pending Transaction
+</div>
+
+<div style="margin-top:6px;">
+${recipient.slice(0,10)}...
 </div>
 `;
 
@@ -443,6 +506,16 @@ document.getElementById(
 ).prepend(div);
 
 }
+
+window.ethereum?.on(
+"accountsChanged",
+() => location.reload()
+);
+
+window.ethereum?.on(
+"chainChanged",
+() => location.reload()
+);
 
 </script>
 
