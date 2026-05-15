@@ -40,7 +40,7 @@
     <div class="card">
       <strong>↗ Send USDC</strong>
       <input type="text" id="recipient" placeholder="Recipient 0x..." />
-      <div style="margin:12px 0 8px;">Amount (USDC)</div>
+      <div style="margin:12px 0 8px;">Amount (1 USDC recommended)</div>
       <input type="number" id="amount" value="1" step="0.01" />
       <button onclick="sendUSDC()">Confirm Send</button>
     </div>
@@ -53,7 +53,8 @@
 
   <script>
     let provider, signer, userAddress;
-    const USDC_ADDRESS = "0x85Bb410B9cB937340CdaA2e3B3Da12C55eF2A67"; // Arc Testnet USDC
+    // Correct Arc Testnet USDC Contract Address
+    const USDC_ADDRESS = "0x85Bb410B9cB937340CdaA2e3B3Da12C55eF2A67";
 
     async function connectWallet() {
       const btn = document.getElementById("connectBtn");
@@ -88,7 +89,7 @@
       const to = document.getElementById("recipient").value.trim();
       const amt = document.getElementById("amount").value;
 
-      if (!ethers.utils.isAddress(to)) return alert("Sahih address daalo");
+      if (!ethers.utils.isAddress(to)) return alert("Sahih recipient address daalo");
 
       try {
         const contract = new ethers.Contract(USDC_ADDRESS, [
@@ -99,7 +100,7 @@
 
         const tx = await contract.transfer(to, amountFormatted);
 
-        alert(`✅ Transaction Sent!\n\nHash: ${tx.hash}\n\nExplorer: https://testnet.arcscan.app/tx/${tx.hash}`);
+        alert(`✅ SUCCESS!\n\nHash: ${tx.hash}\n\nExplorer: https://testnet.arcscan.app/tx/${tx.hash}`);
 
         const div = document.createElement("div");
         div.className = "tx";
