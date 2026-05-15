@@ -1,26 +1,17 @@
 # ArcPro Wallet
 
-**Simple, clean & builder-focused Web3 wallet for Arc Testnet**
+**Builder-focused Web3 wallet for Arc Testnet**
 
-USDC native gas token wala wallet. Less noise, more signal.
+Less noise, more signal. Clean UI + real usage.
 
-## Features
-- MetaMask Connect + Arc Testnet auto add/switch
-- Send USDC (Native)
-- Real-time balance & transaction history
-- Dark professional UI
+## Quick Start
+1. Connect MetaMask
+2. Get test USDC → [Circle Faucet](https://faucet.circle.com) (Arc Testnet)
+3. Recipient address daalo
+4. Amount enter karo (5-10)
+5. Confirm Send → MetaMask approve karo
+6. Explorer pe check karo
 
-## How to Use
+**Live**: https://arc-pro-wallet.vercel.app/
 
-1. **Connect Wallet** button dabao
-2. Testnet USDC lo → [Circle Faucet](https://faucet.circle.com) (Arc Testnet select karke)
-3. Recipient address paste karo
-4. Amount daalo (5-10 recommend)
-5. **Confirm Send** → MetaMask mein Approve karo
-6. Explorer pe check karo: [testnet.arcscan.app](https://testnet.arcscan.app)
-
-**Note:** Arc pe USDC native hai. Small amount se test karo.
-
-Live Demo: https://arc-pro-wallet.vercel.app/
-
-Made by @Bhupendrxsingh — Builder mode on.
+Made by @Bhupendrxsingh
