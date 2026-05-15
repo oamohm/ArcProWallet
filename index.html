@@ -3,105 +3,127 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ArcPro • Universal Wallet</title>
+  <title>ArcPro • Arc Testnet Wallet</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family: 'Inter', sans-serif; background:#0a0a0f; color:#e0e0ff; }
     .container { max-width:480px; margin:0 auto; background:#111118; min-height:100vh; }
-    header { padding:16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #22222f; }
-    .logo { font-size:22px; font-weight:600; }
-    .card { background:#1a1a24; margin:16px; border-radius:16px; padding:20px; }
-    button { background:#3b82f6; color:white; border:none; padding:14px; border-radius:12px; width:100%; font-weight:600; cursor:pointer; font-size:16px; }
-    input, select { width:100%; background:#22222f; border:none; padding:14px; border-radius:12px; color:white; margin:8px 0; font-size:16px; }
+    header { padding:20px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #22222f; }
+    .logo { font-size:24px; font-weight:700; }
+    .card { background:#1a1a24; margin:16px; border-radius:20px; padding:20px; }
+    button { background:#3b82f6; color:white; border:none; padding:16px; border-radius:16px; width:100%; font-weight:600; font-size:16px; cursor:pointer; }
+    input, select { width:100%; background:#22222f; border:none; padding:16px; border-radius:16px; color:white; margin:8px 0; font-size:16px; }
     .quick { display:flex; gap:8px; margin:12px 0; }
-    .quick button { background:#22222f; flex:1; padding:12px; border-radius:12px; font-size:15px; }
-    .tx { padding:12px; background:#22222f; border-radius:8px; margin:8px 0; font-size:13px; }
+    .quick button { background:#22222f; flex:1; padding:12px; border-radius:12px; }
+    .balance { font-size:32px; font-weight:700; }
+    .tx { padding:14px; background:#22222f; border-radius:16px; margin:8px 0; font-size:14px; }
+    .success { color:#22c55e; }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
       <div class="logo">ArcPro</div>
-      <button onclick="connectWallet()" id="connectBtn">Connect</button>
+      <button onclick="connectWallet()" id="connectBtn">Connect Wallet</button>
     </header>
 
     <div class="card">
-      <strong>ARC TESTNET</strong><br>
-      <span id="balanceDisplay" style="font-size:28px; font-weight:600;">0.00 USDC</span>
+      <div style="display:flex;justify-content:space-between;">
+        <div>
+          <div style="font-size:14px;opacity:0.7;">ARC TESTNET</div>
+          <div id="balanceDisplay" class="balance">0.00 USDC</div>
+        </div>
+        <span id="status" style="color:#eab308;">Idle</span>
+      </div>
     </div>
 
     <div class="card">
-      <strong>↗ SEND ASSET</strong>
-      <select id="asset"><option>USDC (Stablecoin)</option></select>
-      <input type="text" id="recipient" placeholder="Recipient address (0x...)" />
-      <div>Quick Amount:</div>
+      <strong>↗ Send USDC</strong>
+      <select><option>USDC (Native)</option></select>
+      <input type="text" id="recipient" placeholder="0x... Recipient Address" />
+      <div style="margin:12px 0 8px;">Quick Amount</div>
       <div class="quick">
+        <button onclick="setAmount(5)">5</button>
         <button onclick="setAmount(10)">10</button>
         <button onclick="setAmount(50)">50</button>
-        <button onclick="setAmount(100)">100</button>
       </div>
-      <input type="number" id="amount" value="10" step="0.01" />
+      <input type="number" id="amount" value="5" step="0.01" />
       <button onclick="sendUSDC()">Confirm Send</button>
     </div>
 
     <div class="card">
       <strong>Recent Transactions</strong>
-      <div id="txHistory"></div>
+      <div id="txHistory" style="margin-top:12px;"></div>
     </div>
   </div>
 
   <script>
-    let signer, userAddress, provider;
+    let provider, signer, userAddress;
 
     async function connectWallet() {
+      const btn = document.getElementById("connectBtn");
+      btn.disabled = true;
+      btn.innerText = "Connecting...";
+
       try {
         const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
         userAddress = accounts[0];
         provider = new ethers.providers.Web3Provider(window.ethereum);
         signer = provider.getSigner();
 
-        document.getElementById("connectBtn").innerText = userAddress.slice(0,6) + "..." + userAddress.slice(-4);
+        btn.innerText = userAddress.slice(0,6) + "..." + userAddress.slice(-4);
+        btn.style.background = "#22c55e";
+        document.getElementById("status").innerText = "Connected";
+        document.getElementById("status").style.color = "#22c55e";
         getBalance();
-      } catch(e) { alert("Connect failed"); }
+      } catch (e) {
+        alert("MetaMask error: " + e.message);
+        btn.disabled = false;
+        btn.innerText = "Connect Wallet";
+      }
     }
 
     async function getBalance() {
+      if (!provider) return;
       const bal = await provider.getBalance(userAddress);
       document.getElementById("balanceDisplay").innerText = (bal / 1e18).toFixed(4) + " USDC";
     }
 
-    function setAmount(v) { document.getElementById("amount").value = v; }
+    function setAmount(val) {
+      document.getElementById("amount").value = val;
+    }
 
     async function sendUSDC() {
+      if (!signer) return alert("Connect wallet first");
+
       const to = document.getElementById("recipient").value.trim();
       const amt = document.getElementById("amount").value;
 
-      if (!ethers.utils.isAddress(to)) return alert("Sahih address daalo");
+      if (!ethers.utils.isAddress(to)) return alert("Invalid address");
 
       try {
         const tx = await signer.sendTransaction({
           to: to,
           value: ethers.utils.parseUnits(amt, 18),
-          gasLimit: 100000   // Fixed safe gas limit
+          gasLimit: 100000
         });
 
-        alert(`✅ Transaction Sent!\nHash: ${tx.hash}`);
-        addTx(tx.hash, amt, to);
-        setTimeout(getBalance, 4000);
+        const hash = tx.hash;
+        alert(`✅ Transaction Sent!\n\nHash: ${hash}\n\nCheck Explorer: https://testnet.arcscan.app/tx/${hash}`);
+
+        // Add to history
+        const div = document.createElement("div");
+        div.className = "tx";
+        div.innerHTML = `<span class="success">✓ Sent ${amt} USDC</span><br><small>${new Date().toLocaleTimeString()} → ${to.slice(0,8)}...</small><br><a href="https://testnet.arcscan.app/tx/${hash}" target="_blank">View on Explorer</a>`;
+        document.getElementById("txHistory").prepend(div);
+
+        setTimeout(getBalance, 5000);
       } catch (e) {
         console.error(e);
-        alert("Error: " + e.message);
+        alert("Transaction Failed: " + (e.message || "Try smaller amount or check gas"));
       }
-    }
-
-    function addTx(hash, amt, to) {
-      const div = document.createElement("div");
-      div.className = "tx";
-      div.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong> • ${amt} USDC → ${to.slice(0,8)}... <br>
-        <a href="https://testnet.arcscan.app/tx/${hash}" target="_blank">View Explorer</a>`;
-      document.getElementById("txHistory").prepend(div);
     }
   </script>
 </body>
