@@ -53,7 +53,7 @@
 
   <script>
     let provider, signer, userAddress;
-    const USDC_ADDRESS = "0x3600000000000000000000000000000000000000"; // Official Arc Testnet USDC
+    const USDC_ADDRESS = "0x3600000000000000000000000000000000000000"; // Official Arc USDC
 
     async function connectWallet() {
       const btn = document.getElementById("connectBtn");
@@ -95,7 +95,8 @@
           "function transfer(address to, uint256 amount) returns (bool)"
         ], signer);
 
-        const amountFormatted = ethers.utils.parseUnits(amt, 18);
+        // **Important: USDC ERC20 interface uses 6 decimals**
+        const amountFormatted = ethers.utils.parseUnits(amt, 6);
 
         const tx = await contract.transfer(to, amountFormatted);
 
@@ -109,7 +110,7 @@
         setTimeout(getBalance, 4000);
       } catch (e) {
         console.error(e);
-        alert("Error: " + (e.message || "Balance kam hai ya network issue"));
+        alert("Error: " + (e.message || "Balance kam hai. Faucet se aur USDC lo"));
       }
     }
   </script>
