@@ -38,7 +38,7 @@
     </div>
 
     <div class="card">
-      <strong>↗ Send USDC</strong>
+      <strong>↗ Send USDC (Native)</strong>
       <input type="text" id="recipient" placeholder="Recipient 0x..." />
       <div style="margin:12px 0 8px;">Amount (USDC)</div>
       <input type="number" id="amount" value="1" step="0.01" />
@@ -97,10 +97,10 @@
         const tx = await signer.sendTransaction({
           to: to,
           value: ethers.utils.parseUnits(amt, 18),
-          gasLimit: 80000
+          gasLimit: 120000   // Increased for Brave + Arc compatibility
         });
 
-        alert(`✅ Transaction Sent Successfully!\n\nHash: ${tx.hash}\n\nView: https://testnet.arcscan.app/tx/${tx.hash}`);
+        alert(`✅ SUCCESS!\n\nHash: ${tx.hash}\n\nExplorer: https://testnet.arcscan.app/tx/${tx.hash}`);
 
         const div = document.createElement("div");
         div.className = "tx";
@@ -110,7 +110,7 @@
         setTimeout(getBalance, 4000);
       } catch (e) {
         console.error(e);
-        alert("Transaction Failed:\n" + e.message + "\n\nTips:\n1. Amount 1 USDC rakho\n2. Brave Wallet restart karo\n3. MetaMask try karo");
+        alert("Transaction Failed:\n" + e.message + "\n\nTry:\n1. Amount = 1 USDC\n2. Brave Wallet restart\n3. MetaMask use karo");
       }
     }
   </script>
