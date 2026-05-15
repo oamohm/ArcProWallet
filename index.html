@@ -3,112 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ArcPro Wallet</title>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <title>Arc Pro Wallet</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:#050816; font-family:'Inter',sans-serif; color:white; }
-        .container { max-width:480px; margin:auto; padding-bottom:40px; }
-        header { display:flex; justify-content:space-between; align-items:center; padding:20px; }
-        .logo { font-size:30px; font-weight:700; }
-        .connectBtn { background:#3154ff; padding:14px 18px; border:none; border-radius:16px; color:white; font-weight:600; cursor:pointer; }
-        .card { background:#0d1324; margin:16px; padding:24px; border-radius:24px; border:1px solid #1f2d52; }
-        .label { font-size:13px; color:#8ea2ff; margin-bottom:8px; }
-        .balance { font-size:38px; font-weight:700; margin-top:5px; }
-        .network { color:#22c55e; font-size:14px; font-weight:600; }
-        input { width:100%; margin-top:14px; padding:16px; border:none; border-radius:16px; background:#151d33; color:white; font-size:15px; outline:none; }
-        .sendBtn { width:100%; margin-top:18px; padding:16px; border:none; border-radius:16px; background:#3b82f6; color:white; font-size:16px; font-weight:600; cursor:pointer; }
-        .status { margin-top:16px; font-size:13px; color:#8ea2ff; text-align:center; }
+        :root { --primary: #3b82f6; --bg: #050816; --card: #0d1324; --text: #f1f5f9; }
+        body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; margin: 0; display: flex; justify-content: center; min-height: 100vh; }
+        .app { width: 100%; max-width: 440px; padding: 20px; }
+        .card { background: var(--card); border-radius: 24px; padding: 24px; border: 1px solid #1f2d52; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .btn-connect { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 14px; font-weight: 700; cursor: pointer; }
+        .balance-val { font-size: 3.2rem; font-weight: 800; text-align: center; margin: 10px 0; }
+        .label { color: #8ea2ff; font-size: 0.8rem; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+        input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 16px; border: 1px solid #1f2d52; background: #050816; color: white; outline: none; box-sizing: border-box; }
+        .btn-send { background: #3154ff; color: white; border: none; padding: 16px; border-radius: 16px; width: 100%; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .status { text-align: center; font-size: 0.8rem; margin-top: 15px; color: #22c55e; }
     </style>
 </head>
 <body>
-<div class="container">
-    <header>
-        <div class="logo">ArcPro</div>
-        <button class="connectBtn" id="connectBtn" onclick="connectWallet()">Connect Wallet</button>
-    </header>
-    <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
-            <div><div class="label">ARC TESTNET</div><div class="balance" id="balanceDisplay">0.00 USDC</div></div>
-            <div class="network" id="networkStatus">Disconnected</div>
-        </div>
-        <div id="walletAddress" style="font-size:11px; margin-top:12px; color:#4e66a3;">Connect to see address</div>
+
+<div class="app">
+    <div class="header">
+        <h2 style="margin:0; font-style: italic;">ArcPro</h2>
+        <button class="btn-connect" id="cnBtn" onclick="connect()">Connect</button>
     </div>
+
     <div class="card">
-        <div style="font-size:16px;font-weight:600;">↗ Send USDC</div>
-        <input id="recipient" placeholder="Recipient 0x..." />
-        <input id="amount" placeholder="Amount (e.g. 1)" type="number" step="0.01" />
-        <button class="sendBtn" id="sendBtn" onclick="sendUSDC()">Confirm Send</button>
-        <div class="status" id="status">Waiting for connection...</div>
+        <div class="label">Arc Testnet Balance</div>
+        <div class="balance-val" id="balText">0.00</div>
+        <div style="text-align:center;"><span style="background:#1e293b; padding:4px 12px; border-radius:8px; font-size:0.7rem; color:var(--primary)">NATIVE USDC</span></div>
+        <div class="status" id="addrText" style="color:#94a3b8">Not Connected</div>
+    </div>
+
+    <div class="card">
+        <h4 style="margin:0 0 10px 0">Transfer Assets</h4>
+        <input type="text" id="to" placeholder="Recipient Address (0x...)">
+        <input type="number" id="amt" placeholder="Amount (USDC)">
+        <button class="btn-send" onclick="send()">Process Transfer</button>
+        <div id="stText" class="status"></div>
     </div>
 </div>
 
 <script>
-let provider, signer, userAddress;
-// ye arc testnet ka updated usdc contract hai
-const USDC_ADDRESS = "0x85Bb410B9cB937340CdaA2e3B3Da12C55eF2A67"; 
-const USDC_ABI = [
-    "function balanceOf(address owner) view returns (uint256)",
-    "function transfer(address to, uint256 amount) returns (bool)",
-    "function decimals() view returns (uint8)"
-];
+let p, s, addr;
+const USDC = "0x3600000000000000000000000000000000000000"; // native usdc
+const ABI = ["function balanceOf(address) view returns (uint256)", "function decimals() view returns (uint8)", "function transfer(address, uint256) returns (bool)"];
 
-async function connectWallet() {
-    if(!window.ethereum) return alert("Brave ya MetaMask use karein");
-    try {
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        provider = new ethers.providers.Web3Provider(window.ethereum);
-        signer = provider.getSigner();
-        userAddress = await signer.getAddress();
-        
-        document.getElementById("connectBtn").innerText = userAddress.slice(0,6) + "..." + userAddress.slice(-4);
-        document.getElementById("walletAddress").innerText = userAddress;
-        document.getElementById("networkStatus").innerText = "Arc Testnet";
-        document.getElementById("status").innerText = "Wallet Connected ✅";
-        
-        loadBalance();
-    } catch(e) { console.error(e); }
+async function connect() {
+    if (!window.ethereum) return alert("Brave ya MetaMask open karein");
+    p = new ethers.BrowserProvider(window.ethereum);
+    const accs = await p.send("eth_requestAccounts", []);
+    s = await p.getSigner();
+    addr = accs[0];
+    document.getElementById('cnBtn').innerText = "Connected";
+    document.getElementById('addrText').innerText = "Linked: " + addr.slice(0,6) + "..." + addr.slice(-4);
+    await getBal();
 }
 
-async function loadBalance() {
-    if(!userAddress) return;
+async function getBal() {
     try {
-        const contract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, provider);
-        // arc testnet par decimals 18 ya 6 ho sakte hain, ye auto-detect karega
-        const [rawBal, decimals] = await Promise.all([
-            contract.balanceOf(userAddress),
-            contract.decimals().catch(() => 18)
-        ]);
-        
-        const formattedBal = ethers.utils.formatUnits(rawBal, decimals);
-        document.getElementById("balanceDisplay").innerText = Number(formattedBal).toFixed(2) + " USDC";
-    } catch(e) {
-        console.error("balance error:", e);
-        document.getElementById("balanceDisplay").innerText = "0.00 USDC";
-    }
+        const c = new ethers.Contract(USDC, ABI, p);
+        const [b, d] = await Promise.all([c.balanceOf(addr), c.decimals()]);
+        document.getElementById('balText').innerText = parseFloat(ethers.formatUnits(b, d)).toFixed(2);
+    } catch (e) { console.error(e); }
 }
 
-async function sendUSDC() {
-    if(!signer) return alert("Pehle connect karein");
-    const to = document.getElementById("recipient").value;
-    const amt = document.getElementById("amount").value;
-    
-    if(!ethers.utils.isAddress(to)) return alert("Address sahi nahi hai");
-
+async function send() {
+    const target = document.getElementById('to').value;
+    const val = document.getElementById('amt').value;
+    if (!s || !target || !val) return alert("Details bhariye");
     try {
-        document.getElementById("status").innerText = "Confirming in wallet...";
-        const contract = new ethers.Contract(USDC_ADDRESS, USDC_ABI, signer);
-        const decimals = await contract.decimals().catch(() => 18);
-        
-        const tx = await contract.transfer(to, ethers.utils.parseUnits(amt, decimals));
-        
-        document.getElementById("status").innerText = "Transaction Pending...";
+        document.getElementById('stText').innerText = "Confirming...";
+        const c = new ethers.Contract(USDC, ABI, s);
+        const d = await c.decimals();
+        const tx = await c.transfer(target, ethers.parseUnits(val.toString(), d));
+        document.getElementById('stText').innerText = "Pending...";
         await tx.wait();
-        document.getElementById("status").innerText = "Sent Successfully!";
-        loadBalance();
-    } catch(e) {
-        document.getElementById("status").innerText = "Transaction Failed ✕";
+        document.getElementById('stText').innerText = "Success!";
+        getBal();
+    } catch (e) { 
+        document.getElementById('stText').innerText = "Error: " + (e.reason || "Failed");
         console.error(e);
     }
 }
