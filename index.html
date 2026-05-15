@@ -1,100 +1,540 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ArcPro • Arc Testnet Wallet</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-    * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: 'Inter', sans-serif; background:#0a0a0f; color:#e0e0ff; }
-    .container { max-width:480px; margin:0 auto; background:#111118; min-height:100vh; }
-    header { padding:20px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #22222f; }
-    .logo { font-size:24px; font-weight:700; }
-    .card { background:#1a1a24; margin:16px; border-radius:20px; padding:20px; }
-    button { background:#3b82f6; color:white; border:none; padding:16px; border-radius:16px; width:100%; font-weight:600; font-size:16px; cursor:pointer; }
-    input { width:100%; background:#22222f; border:none; padding:16px; border-radius:16px; color:white; margin:8px 0; font-size:16px; }
-    .balance { font-size:32px; font-weight:700; }
-    .tx { padding:14px; background:#22222f; border-radius:16px; margin:8px 0; font-size:14px; }
-    .success { color:#22c55e; }
-  </style>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ArcPro Wallet</title>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+
+body{
+font-family:'Inter',sans-serif;
+background:#050816;
+color:white;
+}
+
+.container{
+max-width:480px;
+margin:auto;
+padding-bottom:40px;
+}
+
+header{
+padding:20px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.logo{
+font-size:28px;
+font-weight:700;
+}
+
+.connectBtn{
+background:#3154ff;
+border:none;
+padding:14px 18px;
+border-radius:16px;
+color:white;
+font-weight:600;
+cursor:pointer;
+}
+
+.card{
+background:#0d1324;
+margin:16px;
+padding:20px;
+border-radius:24px;
+border:1px solid #1f2d52;
+box-shadow:0 0 25px rgba(0,0,0,0.25);
+}
+
+.label{
+font-size:13px;
+color:#7e92d6;
+margin-bottom:8px;
+}
+
+.balance{
+font-size:40px;
+font-weight:700;
+margin-top:6px;
+}
+
+.network{
+color:#22c55e;
+font-size:14px;
+font-weight:500;
+}
+
+input{
+width:100%;
+padding:16px;
+background:#151d33;
+border:1px solid #263761;
+border-radius:16px;
+color:white;
+font-size:15px;
+margin-top:12px;
+outline:none;
+}
+
+.sendBtn{
+width:100%;
+margin-top:18px;
+padding:16px;
+border:none;
+border-radius:16px;
+background:#3b82f6;
+color:white;
+font-size:16px;
+font-weight:600;
+cursor:pointer;
+}
+
+.sendBtn:hover{
+opacity:0.95;
+}
+
+.tx{
+padding:16px;
+background:#151d33;
+border-radius:16px;
+margin-top:12px;
+font-size:14px;
+}
+
+.success{
+color:#22c55e;
+}
+
+.failed{
+color:#ef4444;
+}
+
+.status{
+margin-top:14px;
+font-size:14px;
+color:#8ea2ff;
+word-break:break-word;
+}
+
+.footer{
+text-align:center;
+padding:20px;
+color:#6d7ca8;
+font-size:13px;
+}
+
+.walletTag{
+background:#22c55e;
+padding:10px 14px;
+border-radius:14px;
+font-size:13px;
+font-weight:600;
+}
+
+</style>
+
 </head>
+
 <body>
-  <div class="container">
-    <header>
-      <div class="logo">ArcPro</div>
-      <button onclick="connectWallet()" id="connectBtn">Connect Wallet</button>
-    </header>
 
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;">
-        <div>
-          <div style="font-size:14px;opacity:0.7;">ARC TESTNET</div>
-          <div id="balanceDisplay" class="balance">0.00 USDC</div>
-        </div>
-        <span id="status" style="color:#22c55e;">Connected</span>
-      </div>
-    </div>
+<div class="container">
 
-    <div class="card">
-      <strong>↗ Send USDC</strong>
-      <input type="text" id="recipient" placeholder="Recipient 0x..." />
-      <div style="margin:12px 0 8px;">Amount (USDC)</div>
-      <input type="number" id="amount" value="1" step="0.01" />
-      <button onclick="sendUSDC()">Confirm Send</button>
-    </div>
+<header>
 
-    <div class="card">
-      <strong>Recent Transactions</strong>
-      <div id="txHistory" style="margin-top:12px;"></div>
-    </div>
+<div class="logo">
+ArcPro
+</div>
 
-    <div style="text-align:center; padding:20px; color:#666; font-size:13px;">
-      Built by @Bhupendrxsingh • Less noise, more signal
-    </div>
-  </div>
+<button
+class="connectBtn"
+id="connectBtn"
+onclick="connectWallet()">
+Connect Wallet
+</button>
 
-  <script>
-    let signer, userAddress;
+</header>
 
-    async function connectWallet() {
-      const btn = document.getElementById("connectBtn");
-      btn.disabled = true;
-      btn.innerText = "Connecting...";
+<div class="card">
 
-      try {
-        await window.ethereum.request({ method: 'eth_requestAccounts' });
-        userAddress = (await window.ethereum.request({ method: 'eth_accounts' }))[0];
-        signer = new ethers.providers.Web3Provider(window.ethereum).getSigner();
+<div style="display:flex;justify-content:space-between;align-items:center;">
 
-        btn.innerText = userAddress.slice(0,6) + "..." + userAddress.slice(-4);
-        btn.style.background = "#22c55e";
-        getBalance();
-      } catch (e) {
-        alert("Connect failed: " + e.message);
-        btn.disabled = false;
-        btn.innerText = "Connect Wallet";
-      }
-    }
+<div>
 
-    async function getBalance() {
-      document.getElementById("balanceDisplay").innerText = "335.04 USDC";
-    }
+<div class="label">
+ARC NETWORK
+</div>
 
-    async function sendUSDC() {
-      const to = document.getElementById("recipient").value.trim();
-      const amt = document.getElementById("amount").value;
+<div
+class="balance"
+id="balanceDisplay">
+0.00 ETH
+</div>
 
-      if (!to) return alert("Recipient address daalo");
+</div>
 
-      alert(`✅ Tx initiated for ${amt} USDC to ${to}\n\n(This is demo mode)\n\nReal transfer on Arc Testnet needs network fix.`);
-      
-      const div = document.createElement("div");
-      div.className = "tx";
-      div.innerHTML = `<span class="success">✓ ${amt} USDC Sent (Demo)</span><br><small>${new Date().toLocaleTimeString()} → ${to.slice(0,8)}...</small>`;
-      document.getElementById("txHistory").prepend(div);
-    }
-  </script>
+<div
+class="network"
+id="networkStatus">
+Disconnected
+</div>
+
+</div>
+
+<div
+id="walletAddress"
+style="margin-top:16px;font-size:13px;color:#8ea2ff;word-break:break-word;">
+Wallet not connected
+</div>
+
+</div>
+
+<div class="card">
+
+<div style="font-weight:600;font-size:18px;">
+↗ Send Transaction
+</div>
+
+<input
+type="text"
+id="recipient"
+placeholder="Recipient 0x...">
+
+<input
+type="number"
+id="amount"
+placeholder="Amount In ETH"
+step="0.0001">
+
+<button
+class="sendBtn"
+onclick="sendTransaction()">
+Confirm Send
+</button>
+
+<div
+class="status"
+id="status">
+Waiting for wallet connection
+</div>
+
+</div>
+
+<div class="card">
+
+<div style="font-weight:600;font-size:18px;">
+Recent Transactions
+</div>
+
+<div id="txHistory"></div>
+
+</div>
+
+<div class="footer">
+Built by @Bhupendrxsingh • Less noise, more signal
+</div>
+
+</div>
+
+<script>
+
+let provider;
+let signer;
+let userAddress;
+
+async function connectWallet(){
+
+try{
+
+if(!window.ethereum){
+
+alert("Install MetaMask");
+
+return;
+
+}
+
+document.getElementById(
+"connectBtn"
+).innerText = "Connecting...";
+
+await window.ethereum.request({
+method:'eth_requestAccounts'
+});
+
+provider =
+new ethers.providers.Web3Provider(
+window.ethereum
+);
+
+signer = provider.getSigner();
+
+userAddress =
+await signer.getAddress();
+
+const network =
+await provider.getNetwork();
+
+document.getElementById(
+"connectBtn"
+).innerText =
+userAddress.slice(0,6) +
+"..." +
+userAddress.slice(-4);
+
+document.getElementById(
+"connectBtn"
+).style.background =
+"#22c55e";
+
+document.getElementById(
+"walletAddress"
+).innerHTML =
+userAddress;
+
+document.getElementById(
+"networkStatus"
+).innerHTML =
+network.name;
+
+loadBalance();
+
+}catch(err){
+
+console.log(err);
+
+alert("Wallet Connection Failed");
+
+document.getElementById(
+"connectBtn"
+).innerText =
+"Connect Wallet";
+
+}
+
+}
+
+async function loadBalance(){
+
+try{
+
+const balanceWei =
+await provider.getBalance(
+userAddress
+);
+
+const balanceEth =
+ethers.utils.formatEther(
+balanceWei
+);
+
+document.getElementById(
+"balanceDisplay"
+).innerHTML =
+Number(balanceEth).toFixed(4) +
+" ETH";
+
+}catch(err){
+
+console.log(err);
+
+}
+
+}
+
+async function sendTransaction(){
+
+try{
+
+const recipient =
+document.getElementById(
+"recipient"
+).value.trim();
+
+const amount =
+document.getElementById(
+"amount"
+).value.trim();
+
+if(!recipient){
+
+alert("Enter Recipient");
+
+return;
+
+}
+
+if(!ethers.utils.isAddress(recipient)){
+
+alert("Invalid Wallet Address");
+
+return;
+
+}
+
+if(Number(amount) <= 0){
+
+alert("Enter Valid Amount");
+
+return;
+
+}
+
+document.getElementById(
+"status"
+).innerHTML =
+"Waiting For Wallet Confirmation...";
+
+const tx =
+await signer.sendTransaction({
+
+to: recipient,
+
+value:
+ethers.utils.parseEther(amount)
+
+});
+
+document.getElementById(
+"status"
+).innerHTML =
+"Transaction Pending...";
+
+const txHash = tx.hash;
+
+addTransaction(
+amount,
+recipient,
+"pending",
+txHash
+);
+
+await tx.wait();
+
+document.getElementById(
+"status"
+).innerHTML =
+"Transaction Successful";
+
+addTransaction(
+amount,
+recipient,
+"success",
+txHash
+);
+
+loadBalance();
+
+}catch(err){
+
+console.log(err);
+
+document.getElementById(
+"status"
+).innerHTML =
+"Transaction Failed";
+
+addTransaction(
+"0",
+"failed",
+"failed",
+""
+);
+
+}
+
+}
+
+function addTransaction(
+amount,
+recipient,
+status,
+hash
+){
+
+const div =
+document.createElement("div");
+
+div.className = "tx";
+
+if(status === "success"){
+
+div.innerHTML =
+`
+<div class="success">
+✓ ${amount} ETH Sent
+</div>
+
+<div style="margin-top:6px;">
+${recipient.slice(0,10)}...
+</div>
+
+<div style="margin-top:6px;font-size:12px;color:#8ea2ff;">
+${hash.slice(0,18)}...
+</div>
+`;
+
+}else if(status === "pending"){
+
+div.innerHTML =
+`
+<div style="color:#facc15;">
+⏳ Pending Transaction
+</div>
+
+<div style="margin-top:6px;">
+${recipient.slice(0,10)}...
+</div>
+`;
+
+}else{
+
+div.innerHTML =
+`
+<div class="failed">
+✕ Transaction Failed
+</div>
+`;
+
+}
+
+document.getElementById(
+"txHistory"
+).prepend(div);
+
+}
+
+window.ethereum?.on(
+"accountsChanged",
+() => {
+window.location.reload();
+}
+);
+
+window.ethereum?.on(
+"chainChanged",
+() => {
+window.location.reload();
+}
+);
+
+</script>
+
 </body>
 </html>
