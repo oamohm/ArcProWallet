@@ -1,267 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
-
-<title>ArcPro Wallet</title>
-
-<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-
-<style>
-
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-}
-
-body{
-background:#050816;
-font-family:'Inter',sans-serif;
-color:white;
-}
-
-.container{
-max-width:480px;
-margin:auto;
-padding-bottom:40px;
-}
-
-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-padding:20px;
-}
-
-.logo{
-font-size:30px;
-font-weight:700;
-}
-
-.connectBtn{
-background:#3154ff;
-padding:14px 18px;
-border:none;
-border-radius:16px;
-color:white;
-font-weight:600;
-cursor:pointer;
-}
-
-.card{
-background:#0d1324;
-margin:16px;
-padding:20px;
-border-radius:24px;
-border:1px solid #1f2d52;
-box-shadow:0 0 30px rgba(0,0,0,0.3);
-}
-
-.label{
-font-size:13px;
-color:#8ea2ff;
-margin-bottom:8px;
-}
-
-.balance{
-font-size:38px;
-font-weight:700;
-margin-top:5px;
-}
-
-.network{
-color:#22c55e;
-font-size:14px;
-font-weight:600;
-}
-
-.wallet{
-margin-top:14px;
-font-size:13px;
-word-break:break-word;
-color:#8ea2ff;
-}
-
-input{
-width:100%;
-margin-top:14px;
-padding:16px;
-border:none;
-outline:none;
-border-radius:16px;
-background:#151d33;
-color:white;
-font-size:15px;
-}
-
-.sendBtn{
-width:100%;
-margin-top:18px;
-padding:16px;
-border:none;
-border-radius:16px;
-background:#3b82f6;
-color:white;
-font-size:16px;
-font-weight:600;
-cursor:pointer;
-}
-
-.status{
-margin-top:16px;
-font-size:14px;
-color:#8ea2ff;
-word-break:break-word;
-}
-
-.tx{
-background:#151d33;
-padding:14px;
-border-radius:16px;
-margin-top:12px;
-font-size:14px;
-}
-
-.success{
-color:#22c55e;
-}
-
-.failed{
-color:#ef4444;
-}
-
-.pending{
-color:#facc15;
-}
-
-.footer{
-text-align:center;
-padding:20px;
-font-size:13px;
-color:#6d7ca8;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="container">
-
-<header>
-
-<div class="logo">
-ArcPro
-</div>
-
-<button
-class="connectBtn"
-id="connectBtn"
-onclick="connectWallet()">
-Connect Wallet
-</button>
-
-</header>
-
-<div class="card">
-
-<div style="display:flex;justify-content:space-between;align-items:center;">
-
-<div>
-
-<div class="label">
-USDC BALANCE
-</div>
-
-<div
-class="balance"
-id="balanceDisplay">
-0.00
-</div>
-
-</div>
-
-<div
-class="network"
-id="networkStatus">
-Disconnected
-</div>
-
-</div>
-
-<div
-class="wallet"
-id="walletAddress">
-Wallet not connected
-</div>
-
-</div>
-
-<div class="card">
-
-<div style="font-size:18px;font-weight:600;">
-↗ Send USDC
-</div>
-
-<input
-id="recipient"
-placeholder="Recipient 0x..." />
-
-<input
-id="amount"
-placeholder="Amount"
-type="number"
-step="0.01" />
-
-<button
-class="sendBtn"
-onclick="sendUSDC()">
-Confirm Send
-</button>
-
-<div
-class="status"
-id="status">
-Waiting for wallet connection
-</div>
-
-</div>
-
-<div class="card">
-
-<div style="font-size:18px;font-weight:600;">
-Recent Transactions
-</div>
-
-<div id="txHistory"></div>
-
-</div>
-
-<div class="footer">
-Built by @Bhupendrxsingh • Less noise, more signal
-</div>
-
-</div>
-
 <script>
 
 let provider;
 let signer;
 let userAddress;
 
-const CHAIN_ID = "0xa4b1";
+/* ARC TESTNET CONFIG */
+
+const CHAIN_ID = "0xA86A";
+
+/*
+IMPORTANT:
+
+Neeche wala contract address
+ARC TESTNET ka REAL USDC address hona chahiye.
+
+Abhi placeholder dala hai.
+
+Agar official faucet/docs se
+ARC USDC address mile
+toh yahi replace karna.
+
+*/
 
 const USDC_ADDRESS =
-"0xaf88d065e77c8cc2239327c5edb3a432268e5831";
+"0xYourArcUSDCContractAddress";
+
+/* ERC20 ABI */
 
 const USDC_ABI = [
 
@@ -273,6 +37,8 @@ const USDC_ABI = [
 
 ];
 
+/* SWITCH ARC TESTNET */
+
 async function switchNetwork(){
 
 try{
@@ -281,19 +47,66 @@ await window.ethereum.request({
 
 method:"wallet_switchEthereumChain",
 
-params:[{ chainId: CHAIN_ID }]
+params:[{
+chainId: CHAIN_ID
+}]
 
 });
 
-}catch(err){
+}catch(switchError){
 
-console.log(err);
+/*
+Agar network added nahi hai
+toh automatic add karega
+*/
 
-alert("Switch network manually to Arbitrum");
+if(switchError.code === 4902){
+
+try{
+
+await window.ethereum.request({
+
+method:"wallet_addEthereumChain",
+
+params:[{
+
+chainId: CHAIN_ID,
+
+chainName:"Arc Testnet",
+
+nativeCurrency:{
+name:"Arc",
+symbol:"ARC",
+decimals:18
+},
+
+rpcUrls:[
+"https://rpc-testnet.arc.network"
+],
+
+blockExplorerUrls:[
+"https://scan-testnet.arc.network"
+]
+
+}]
+
+});
+
+}catch(addError){
+
+console.log(addError);
+
+alert("Arc Testnet Add Failed");
 
 }
 
 }
+
+}
+
+}
+
+/* CONNECT WALLET */
 
 async function connectWallet(){
 
@@ -301,7 +114,7 @@ try{
 
 if(!window.ethereum){
 
-alert("Install Brave Wallet or MetaMask");
+alert("Install MetaMask or Brave Wallet");
 
 return;
 
@@ -346,7 +159,7 @@ userAddress;
 document.getElementById(
 "networkStatus"
 ).innerHTML =
-"Arbitrum";
+"Arc Testnet";
 
 await loadBalance();
 
@@ -359,6 +172,8 @@ alert("Wallet Connection Failed");
 }
 
 }
+
+/* LOAD USDC BALANCE */
 
 async function loadBalance(){
 
@@ -403,6 +218,8 @@ document.getElementById(
 }
 
 }
+
+/* SEND USDC */
 
 async function sendUSDC(){
 
@@ -517,76 +334,4 @@ addTransaction(
 
 }
 
-function addTransaction(
-amount,
-recipient,
-status,
-hash
-){
-
-const div =
-document.createElement("div");
-
-div.className = "tx";
-
-if(status === "success"){
-
-div.innerHTML =
-`
-<div class="success">
-✓ ${amount} USDC Sent
-</div>
-
-<div style="margin-top:6px;">
-${recipient.slice(0,10)}...
-</div>
-
-<div style="margin-top:6px;font-size:12px;color:#8ea2ff;">
-${hash.slice(0,18)}...
-</div>
-`;
-
-}else if(status === "pending"){
-
-div.innerHTML =
-`
-<div class="pending">
-⏳ Transaction Pending
-</div>
-
-<div style="margin-top:6px;">
-${recipient.slice(0,10)}...
-</div>
-`;
-
-}else{
-
-div.innerHTML =
-`
-<div class="failed">
-✕ Transaction Failed
-</div>
-`;
-
-}
-
-document.getElementById(
-"txHistory"
-).prepend(div);
-
-}
-
-window.ethereum?.on(
-"accountsChanged",
-() => location.reload()
-);
-
-window.ethereum?.on(
-"chainChanged",
-() => location.reload()
-);
-
 </script>
-
-</body>
-</html>
