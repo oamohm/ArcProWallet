@@ -6,52 +6,71 @@
   <title>ArcPro Wallet</title>
   <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
   <style>
-    body { font-family: system-ui; background:#0a0a0f; color:#fff; margin:0; padding:16px; }
-    .card { background:#1a1a24; padding:20px; border-radius:16px; margin:16px 0; }
-    button { background:#3b82f6; color:white; border:none; padding:16px; border-radius:12px; width:100%; font-size:16px; }
-    input { width:100%; padding:16px; background:#222; border:none; border-radius:12px; color:white; margin:8px 0; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: 'Inter', sans-serif; background:#0a0a0f; color:#e0e0ff; }
+    .container { max-width:480px; margin:0 auto; background:#111118; min-height:100vh; }
+    header { padding:20px 16px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #222; }
+    .logo { font-size:24px; font-weight:700; }
+    .card { background:#1a1a24; margin:16px; border-radius:20px; padding:20px; }
+    button { background:#3b82f6; color:white; border:none; padding:16px; border-radius:16px; width:100%; font-weight:600; font-size:16px; cursor:pointer; }
+    input { width:100%; background:#22222f; border:none; padding:16px; border-radius:16px; color:white; margin:8px 0; font-size:16px; }
+    .balance { font-size:32px; font-weight:700; }
   </style>
 </head>
 <body>
-  <h2>ArcPro Wallet</h2>
+  <div class="container">
+    <header>
+      <div class="logo">ArcPro</div>
+      <button onclick="connectWallet()" id="connectBtn">Connect</button>
+    </header>
 
-  <div class="card">
-    <strong>ARC TESTNET</strong><br>
-    <span id="balance" style="font-size:28px;">0.00 USDC</span>
-  </div>
+    <div class="card">
+      <strong>ARC TESTNET</strong><br>
+      <span id="balanceDisplay" class="balance">0.00 USDC</span>
+    </div>
 
-  <div class="card">
-    <strong>Send USDC</strong>
-    <input type="text" id="to" placeholder="Recipient 0x...">
-    <input type="number" id="amt" value="1" step="0.01">
-    <button onclick="send()">Confirm Send</button>
+    <div class="card">
+      <strong>Send USDC</strong>
+      <input type="text" id="recipient" placeholder="Recipient 0x..." />
+      <div style="margin:12px 0 8px;">Amount</div>
+      <input type="number" id="amount" value="1" step="0.01" />
+      <button onclick="sendUSDC()">Confirm Send</button>
+    </div>
+
+    <div class="card">
+      <strong>Recent Transactions</strong>
+      <div id="txHistory" style="margin-top:12px; color:#888;">No transactions yet</div>
+    </div>
   </div>
 
   <script>
     let signer, userAddress;
-    const USDC = "0x3600000000000000000000000000000000000000";
 
-    async function connect() {
-      const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-      userAddress = accounts[0];
-      signer = new ethers.providers.Web3Provider(window.ethereum).getSigner();
-      document.getElementById("balance").innerText = "Connected";
-    }
-
-    async function send() {
-      const to = document.getElementById("to").value;
-      const amt = document.getElementById("amt").value;
-
+    async function connectWallet() {
       try {
-        const contract = new ethers.Contract(USDC, ["function transfer(address,uint256)"], signer);
-        const tx = await contract.transfer(to, ethers.utils.parseUnits(amt, 6));
-        alert("Tx Sent! Hash: " + tx.hash);
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        userAddress = (await window.ethereum.request({ method: 'eth_accounts' }))[0];
+        signer = new ethers.providers.Web3Provider(window.ethereum).getSigner();
+        document.getElementById("connectBtn").innerText = userAddress.slice(0,6) + "...";
+        document.getElementById("connectBtn").style.background = "#22c55e";
+        getBalance();
       } catch(e) {
-        alert("Error: " + e.message);
+        alert("Connect failed");
       }
     }
 
-    connect();
+    async function getBalance() {
+      // Placeholder
+      document.getElementById("balanceDisplay").innerText = "335.04 USDC";
+    }
+
+    async function sendUSDC() {
+      const to = document.getElementById("recipient").value;
+      const amt = document.getElementById("amount").value;
+      if (!to) return alert("Recipient address daalo");
+      alert(`Tx initiated for ${amt} USDC to ${to}\n\n(This is demo mode - real transfer needs network fix)`);
+    }
   </script>
 </body>
 </html>
