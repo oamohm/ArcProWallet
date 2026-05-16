@@ -1,56 +1,122 @@
-# 🏦 arc pro wallet (arc testnet)
+# 🏦 ArcPro Wallet (Arc Testnet)
 
-ek lightweight aur secure web-based wallet jo specifically **arc testnet** par native usdc transfers ke liye design kiya gaya hai. ye ethers.js v6 ka upyog karke browser mein hi blockchain se interact karta hai.
-
----
-
-## ✨ features
-* **instant connect:** brave ya metamask wallet ke sath seamless integration.
-* **auto chain switch:** agar arc testnet added nahi hai, to ye automatically chain add/switch karne ka option deta hai.
-* **native usdc support:** `0x3600000000000000000000000000000000000000` contract se direct balance aur transfer fetch karta hai.
-* **live ledger:** real-time transaction history tracking browser session ke dauran.
-* **optimized ui:** dark mode interface jo mobile aur desktop dono par sahi chalta hai.
+A lightweight and secure web-based wallet designed specifically for native USDC transfers on the **Arc Testnet**.  
+The application uses **Ethers.js v6** to interact directly with the blockchain inside the browser.
 
 ---
 
-## 🚀 setup & installation
+## ✨ Features
 
-1.  **file create karein:**
-    `index.html` naam ki ek file banayein aur usme sara code paste kar dein.
+- **Instant Wallet Connect**  
+  Seamless integration with MetaMask and Brave Wallet.
 
-2.  **local server par chalayein:**
-    file ko kisi bhi web browser mein open karein (visual studio code ka *live server* extension best hai).
+- **Automatic Chain Switching**  
+  If Arc Testnet is not added, the app automatically prompts users to add or switch networks.
 
-3.  **network requirements:**
-    * **rpc url:** `https://arc-testnet.drpc.org`
-    * **chain id:** `5042002` (0x4cef52)
-    * **symbol:** `USDC`
+- **Native USDC Support**  
+  Fetches real-time balances and transfers directly from the native USDC contract:
+  `0x3600000000000000000000000000000000000000`
 
----
+- **Live Transaction Ledger**  
+  Tracks recent transactions during the active browser session.
 
-## 🛠 technical stack
-* **frontend:** html5, css3 (inter fonts)
-* **blockchain library:** [ethers.js v6.7.0](https://docs.ethers.org/v6/)
-* **network:** arc testnet layer 1
+- **Optimized Interface**  
+  Clean dark-mode UI optimized for both mobile and desktop devices.
 
 ---
 
-## 📖 how to use?
+## 🚀 Setup & Installation
 
-1.  **connect wallet:** top right mein 'connect' button par click karein aur brave/metamask permission allow karein.
-2.  **check balance:** connect hote hi aapka **native usdc** balance screen par dikhega.
-3.  **send tokens:** * recipient ka address (`0x...`) enter karein.
-    * amount daalein.
-    * 'process transfer' par click karein aur wallet mein sign karein.
-4.  **track activity:** ledger mein apni recent transactions ka status check karein.
+### 1. Create File
 
----
+Create a file named:
 
-## ⚠️ troubleshooting
-* **balance zero dikh raha hai?** ensure karein ki aapne arc testnet faucet se tokens liye hain.
-* **rpc error?** kabhi kabhi rpc down hota hai, page refresh karke dobara connect karein.
-* **transaction fail?** check karein ki aapke paas gas fees ke liye native tokens hain ya nahi.
+```bash
+index.html
+
+Paste the complete application code into that file.
 
 ---
 
-built with authority by @bhupendrxsingh
+2. Run Locally
+
+Open the file in any browser.
+
+For better development experience, use:
+
+- VS Code
+- Live Server Extension
+
+---
+
+3. Network Requirements
+
+Setting| Value
+RPC URL| "https://arc-testnet.drpc.org"
+Chain ID| "5042002"
+Hex Chain ID| "0x4cef52"
+Currency Symbol| "USDC"
+
+---
+
+🛠 Technical Stack
+
+- Frontend: HTML5, CSS3
+- Fonts: Inter
+- Blockchain Library: Ethers.js v6.7.0
+- Network: Arc Testnet Layer 1
+
+---
+
+📖 How To Use
+
+Connect Wallet
+
+Click the Connect Wallet button and approve the MetaMask or Brave Wallet request.
+
+Check Balance
+
+After connection, your native USDC balance will appear automatically.
+
+Send Tokens
+
+1. Enter recipient address ("0x...")
+2. Enter transfer amount
+3. Click Process Transfer
+4. Confirm transaction inside wallet
+
+Track Activity
+
+Recent transaction history appears inside the built-in ledger section.
+
+---
+
+⚠️ Troubleshooting
+
+Balance Shows Zero
+
+Make sure you have received tokens from the Arc Testnet faucet.
+
+RPC Error
+
+Sometimes the RPC endpoint may temporarily fail. Refresh the page and reconnect.
+
+Transaction Failed
+
+Ensure your wallet has enough native gas tokens for transaction fees.
+
+---
+
+🔒 Security
+
+This application never stores:
+
+- private keys
+- seed phrases
+- passwords
+
+All signing happens directly inside the connected wallet.
+
+---
+
+Built with authority by @bhupendrxsingh
