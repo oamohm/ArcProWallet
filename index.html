@@ -40,7 +40,7 @@
     <div class="card">
       <strong>↗ Send USDC</strong>
       <input type="text" id="recipient" placeholder="Recipient 0x..." />
-      <div style="margin:12px 0 8px;">Amount (USDC)</div>
+      <div style="margin:12px 0 8px;">Amount (1 USDC recommended)</div>
       <input type="number" id="amount" value="1" step="0.01" />
       <button onclick="sendUSDC()">Confirm Send</button>
     </div>
@@ -53,7 +53,7 @@
 
   <script>
     let provider, signer, userAddress;
-    const USDC_ADDRESS = "0x3600000000000000000000000000000000000000"; // Official Arc Testnet USDC
+    const USDC_ADDRESS = "0x3600000000000000000000000000000000000000"; // Official Arc USDC
 
     async function connectWallet() {
       const btn = document.getElementById("connectBtn");
@@ -106,10 +106,10 @@
         div.innerHTML = `<span class="success">✓ ${amt} USDC Sent</span><br><small>${new Date().toLocaleTimeString()} → ${to.slice(0,8)}...</small><br><a href="https://testnet.arcscan.app/tx/${tx.hash}" target="_blank">View Explorer</a>`;
         document.getElementById("txHistory").prepend(div);
 
-        setTimeout(getBalance, 4000);
+        setTimeout(getBalance, 4000); // Real balance update
       } catch (e) {
         console.error(e);
-        alert("Error: " + (e.message || "Balance kam hai ya network issue"));
+        alert("Error: " + (e.message || "Balance kam hai. Faucet se aur USDC lo"));
       }
     }
   </script>
