@@ -16,7 +16,7 @@
         .label { color: #8ea2ff; font-size: 0.8rem; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
         input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 16px; border: 1px solid #1f2d52; background: #050816; color: white; outline: none; box-sizing: border-box; }
         .btn-send { background: #3154ff; color: white; border: none; padding: 16px; border-radius: 16px; width: 100%; font-weight: 700; cursor: pointer; margin-top: 10px; }
-        .status { text-align: center; font-size: 0.8rem; margin-top: 15px; color: #22c55e; }
+        .status { text-align: center; font-size: 0.8rem; margin-top: 15px; color: #22c55e; word-break: break-all; }
     </style>
 </head>
 <body>
@@ -30,8 +30,9 @@
     <div class="card">
         <div class="label">Arc Testnet Balance</div>
         <div class="balance-val" id="balText">0.00</div>
-        <div style="text-align:center;"><span style="background:#1e293b; padding:4px 12px; border-radius:8px; font-size:0.7rem; color:var(--primary)">NATIVE USDC</span></div>
-        <div class="status" id="addrText" style="color:#94a3b8">Not Connected</div>
+        <div style="text-align:center; margin-bottom: 10px;"><span style="background:#1e293b; padding:4px 12px; border-radius:8px; font-size:0.7rem; color:var(--primary)">NATIVE USDC</span></div>
+        <div class="label" style="font-size: 0.7rem;">Gas Balance (ARC): <span id="gasText" style="color:#fff;">0.00</span></div>
+        <div class="status" id="addrText" style="color:#94a3b8">Linked: 0x...</div>
     </div>
 
     <div class="card">
@@ -39,13 +40,13 @@
         <input type="text" id="to" placeholder="Recipient Address (0x...)">
         <input type="number" id="amt" placeholder="Amount (USDC)">
         <button class="btn-send" onclick="send()">Process Transfer</button>
-        <div id="stText" class="status"></div>
+        <div id="stText" class="status" style="color: #ef4444;"></div>
     </div>
 </div>
 
 <script>
 let p, s, addr;
-const USDC = "0x3600000000000000000000000000000000000000"; // native usdc
+const USDC = "0x3600000000000000000000000000000000000000"; // native usdc contract
 const ABI = ["function balanceOf(address) view returns (uint256)", "function decimals() view returns (uint8)", "function transfer(address, uint256) returns (bool)"];
 
 async function connect() {
@@ -62,8 +63,13 @@ async function connect() {
 async function getBal() {
     try {
         const c = new ethers.Contract(USDC, ABI, p);
-        const [b, d] = await Promise.all([c.balanceOf(addr), c.decimals()]);
+        const [b, d, gasBal] = await Promise.all([
+            c.balanceOf(addr), 
+            c.decimals(),
+            p.getBalance(addr)
+        ]);
         document.getElementById('balText').innerText = parseFloat(ethers.formatUnits(b, d)).toFixed(2);
+        document.getElementById('gasText').innerText = parseFloat(ethers.formatEther(gasBal)).toFixed(4) + " ARC";
     } catch (e) { console.error(e); }
 }
 
@@ -71,20 +77,35 @@ async function send() {
     const target = document.getElementById('to').value;
     const val = document.getElementById('amt').value;
     if (!s || !target || !val) return alert("Details bhariye");
+    
     try {
-        document.getElementById('stText').innerText = "Confirming...";
+        const stDisplay = document.getElementById('stText');
+        stDisplay.style.color = "#3b82f6";
+        stDisplay.innerText = "Processing request...";
+        
         const c = new ethers.Contract(USDC, ABI, s);
         const d = await c.decimals();
-        const tx = await c.transfer(target, ethers.parseUnits(val.toString(), d));
-        document.getElementById('stText').innerText = "Pending...";
+        const parsedAmount = ethers.parseUnits(val.toString(), d);
+
+        // automatic standard pricing for testnet routing
+        const tx = await c.transfer(target, parsedAmount, {
+            gasLimit: 65000
+        });
+
+        stDisplay.innerText = "Transaction Pending...";
         await tx.wait();
-        document.getElementById('stText').innerText = "Success!";
+        
+        stDisplay.style.color = "#22c55e";
+        stDisplay.innerText = "Transfer Successful!";
         getBal();
     } catch (e) { 
-        document.getElementById('stText').innerText = "Error: " + (e.reason || "Failed");
         console.error(e);
+        document.getElementById('stText').style.color = "#ef4444";
+        document.getElementById('stText').innerText = "Error: Gas fees ke liye native ARC token chahiye.";
     }
 }
+
+window.addEventListener('load', () => { if(window.ethereum) connect(); });
 </script>
 </body>
 </html>
