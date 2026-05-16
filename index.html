@@ -46,7 +46,7 @@
 
 <script>
 let p, s, addr;
-const USDC = "0x3600000000000000000000000000000000000000"; // native usdc contract
+const USDC = "0x3600000000000000000000000000000000000000"; // native usdc
 const ABI = ["function balanceOf(address) view returns (uint256)", "function decimals() view returns (uint8)", "function transfer(address, uint256) returns (bool)"];
 
 async function connect() {
@@ -81,27 +81,32 @@ async function send() {
     try {
         const stDisplay = document.getElementById('stText');
         stDisplay.style.color = "#3b82f6";
-        stDisplay.innerText = "Processing request...";
+        stDisplay.innerText = "Initiating core transfer payload...";
         
         const c = new ethers.Contract(USDC, ABI, s);
         const d = await c.decimals();
         const parsedAmount = ethers.parseUnits(val.toString(), d);
 
-        // automatic standard pricing for testnet routing
+        // bypass static restrictions with custom gas configurations for brave browser engine
+        const feeData = await p.getFeeData();
+        
         const tx = await c.transfer(target, parsedAmount, {
-            gasLimit: 65000
+            gasLimit: 120000,
+            maxFeePerGas: feeData.maxFeePerGas || feeData.gasPrice || ethers.parseUnits('25', 'gwei'),
+            maxPriorityFeePerGas: feeData.maxPriorityFeePerGas || ethers.parseUnits('2', 'gwei')
         });
 
-        stDisplay.innerText = "Transaction Pending...";
+        stDisplay.innerText = "Broadcasting to Arc Block Layer...";
         await tx.wait();
         
         stDisplay.style.color = "#22c55e";
-        stDisplay.innerText = "Transfer Successful!";
+        stDisplay.innerText = "Success! Asset sync completed.";
         getBal();
     } catch (e) { 
         console.error(e);
         document.getElementById('stText').style.color = "#ef4444";
-        document.getElementById('stText').innerText = "Error: Gas fees ke liye native ARC token chahiye.";
+        // displays fallback error string securely
+        document.getElementById('stText').innerText = "Execution Interrupted: Check node synchronization or Brave gas limits.";
     }
 }
 
